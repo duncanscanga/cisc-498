@@ -1,0 +1,37 @@
+{% extends 'base.html' %} {% block content %}
+<link rel="stylesheet" href="../static/styles/login.css" />
+
+<div class="container">
+  <h1>{% block title %}LogIn{% endblock %}</h1>
+  <h4 id='message'>{{message}}</h4>
+  <form method="post">
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input 
+        class="form-control" 
+        placeholder="enter your email" 
+        name="email" 
+        id="email" 
+        required>
+
+      <label for="password">Password</label>
+      <input 
+        class="form-control" 
+        placeholder="enter your password" 
+        type="password" 
+        name="password" 
+        id="password" 
+        required>
+
+      <div class="btn-wrapper">
+        <input 
+          class="btn btn-lg btn-primary" 
+          type="submit" 
+          id="btn-submit" 
+          value="Log In">
+      </div>
+    </div>
+  </form>
+  Don't have an account? <a href='/register'>Register</a>
+</div>
+{% endblock %}

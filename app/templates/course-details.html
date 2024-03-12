@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+<link rel="stylesheet" href="../static/styles/index.css" />
+
+{% block header %}
+<h1>{% block title %}Course Details - {{ course.name }}{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+
+<div id="course-details" class="container">
+    <h2>Course Details:</h2>
+
+    <div class="detail-item">
+        <strong>Name:</strong> {{ course.name }}
+    </div>
+    <div class="detail-item">
+        <strong>Course Code:</strong> {{ course.courseCode }}
+    </div>
+    <div class="detail-item">
+        <strong>Year:</strong> {{ course.year }}
+    </div>
+    <div class="detail-item">
+        <strong>Semester:</strong> {{ course.semester }}
+    </div>
+    <div class="detail-item">
+        <strong>Start Date:</strong> {{ course.startDate}}
+    </div>
+    <div class="detail-item">
+        <strong>End Date:</strong> {{ course.endDate }}
+    </div>
+    <!-- You can add more details as needed -->
+</div>
+
+<div id="assignments" class="container">
+    <h2>Assignments:</h2>
+        {% for assignment in assignments %}
+        <ul>
+    <li>
+        <a href="/assignments/{{ assignment.id }}">{{ assignment.name }}</a>
+    </li>
+</ul>
+    {% endfor %}
+
+    {% if user is defined and user.role == 3 %}
+    <a href="/add-assignments/{{ course.id }}" class="btn">Add Assignment</a>
+    {% endif %}
+</div>
+
+
+
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+<link rel="stylesheet" href="../static/styles/index.css" />
+
+{% block header %}
+<h1>{% block title %}Queen's Autograder{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+
+<h3>Courses:</h3>
+
+<div id="courses">
+    <table>
+        <tr>
+          <th>Name</th>
+          <th>Course Code</th>
+          <th>Year</th>
+          <th>Semester</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+        </tr>
+        {% for course in courses %}
+        <tr>
+            <td><a href="/courses/{{course.id}}">{{ course.name }}</a></td>
+            <td>{{ course.courseCode }}</td>
+            <td>{{ course.year }}</td>
+            <td>{{ course.semester }}</td>
+            <td>{{ course.startDate }}</td>
+            <td>{{ course.endDate }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+<link rel="stylesheet" href="../static/styles/update_user.css" />
+
+<div class="container">
+  <h1>Edit Assignment</h1>
+  <h4 id="message">{{ msg }}</h4>
+  <form action="/edit-assignment/{{ assignment.id }}" method="post">
+    <div class="form-group">
+      <label for="name">Assignment Name</label>
+      <input class="form-control" name="name" id="name" value="{{ assignment.name }}" required />
+
+      <label for="startDate">Start Date</label>
+      <input class="form-control" type="date" name="startDate" id="startDate" value="{{ assignment.startDate }}"  />
+
+      <label for="endDate">End Date</label>
+      <input class="form-control" type="date" name="endDate" id="endDate" value="{{ assignment.endDate}}"  />
+
+      <!-- Add more fields as necessary -->
+
+      <div class="btn-wrapper">
+        <input class="btn" type="submit" value="Update Assignment" />
+      </div>
+    </div>
+  </form>
+
+  <!-- Section for Test Cases -->
+  <h2>Test Cases</h2>
+  {% for test_case in testCases %}
+  <div class="test-case">
+    <span>{{ test_case.fileName }}</span>
+    <!-- Button to delete test case -->
+    <a href="/delete-testcase/{{ assignment.id }}/{{ test_case.id }}" class="btn btn-danger">Delete</a>
+  </div>
+  {% endfor %}
+
+  <!-- Optionally, add a form or method to add new test cases -->
+
+</div>
+{% endblock %}

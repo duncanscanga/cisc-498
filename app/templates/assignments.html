@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+<link rel="stylesheet" href="../static/styles/index.css" />
+
+{% block header %}
+<h1>{% block title %}Queen's Autograder{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+
+<h3>Assignments:</h3>
+
+<div id="assignments">
+    <table>
+        <tr>
+          <th>Name</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+        </tr>
+        {% for assignment in assignments %}
+        <tr>
+            <td><a href="/assignments/{{assignment.id}}">{{ assignment.name }}</a></td>
+            <td>{{ assignment.startDate }}</td>
+            <td>{{ assignment.endDate }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <input
+    class="btn"
+              type="button"
+    value="Create Assignment"
+    onclick="location.href = '/create-assignment'"
+  />
+</div>
+
+{% endblock %}
+
+
+
+
+

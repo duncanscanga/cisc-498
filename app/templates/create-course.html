@@ -1,0 +1,56 @@
+{% extends 'base.html' %} 
+{% block content %}
+<link rel="stylesheet" href="../static/styles/create_course.css" />
+
+<div class="container">
+  <h1>Create Course</h1>
+  <form method="post">
+    <div class="form-group">
+      <label for="courseCode">Course Code</label>
+      <input
+        class="form-control"
+        name="courseCode"
+        id="courseCode"
+        required
+      />
+      <label for="name">Course Name</label>
+      <input
+        class="form-control"
+        name="name"
+        id="name"
+        required
+      />
+      <label for="year">Year</label>
+      <input
+        class="form-control"
+        name="year"
+        id="year"
+      />
+      <label for="semester">Semester</label>
+      <input
+        class="form-control"
+        name="semester"
+        id="semester"
+      />
+      <label for="startDate">Start Date</label>
+      <input
+        class="form-control"
+        type="date"
+        name="startDate"
+        id="startDate"
+      />
+      <label for="endDate">End Date</label>
+      <input
+        class="form-control"
+        type="date"
+        name="endDate"
+        id="endDate"
+      />
+
+      <div class="btn-wrapper">
+        <input class="btn" type="submit" value="Create Course" />
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

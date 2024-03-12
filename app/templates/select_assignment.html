@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+<link rel="stylesheet" href="../static/styles/index.css" />
+
+{% block header %}
+<h1>{% block title %}Add Assignment to Course{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+
+<div id="assignments-list" class="container">
+    <h2>Select an Assignment to Add:</h2>
+    <ul>
+        {% for assignment in assignments %}
+        <li>
+            <a href="/add-assignment/{{ course_id }}/{{ assignment.id }}">{{ assignment.name }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+
+
+{% endblock %}

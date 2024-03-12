@@ -1,0 +1,48 @@
+{% extends 'base.html' %} {% block content %}
+<link rel="stylesheet" href="../static/styles/update_user.css" />
+
+<div class="container">
+  <h1>Update User Information</h1>
+  <h4 id="message">{{ msg }}</h4>
+  <form method="post">
+    <div class="form-group">
+      <label for="email">Update Email</label>
+      <input
+        class="form-control"
+        name="email"
+        id="email"
+        value="{{ user.email }}"
+        required
+      />
+      <label for="name">Update Username</label>
+      <input
+        class="form-control"
+        name="name"
+        id="name"
+        value="{{ user.username }}"
+        required
+      />
+      <label for="password">Update Password</label>
+      <input
+        class="form-control"
+        type="password"
+        name="password"
+        id="password"
+        value="{{ user.password }}"
+        required
+      />
+      <label for="student-number">Update Student Number</label>
+      <input
+        class="form-control"
+        name="student-number"
+        id="student-number"
+        value="{{ user.student_number }}"
+      />
+
+      <div class="btn-wrapper">
+        <input class="btn" type="submit" value="Update Information" />
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
