@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<link rel="stylesheet" href="../static/styles/course_enrollment.css" />
+
+<div class="container">
+  <h1>Course Enrollment</h1>
+  <form method="post">
+    <div class="form-group">
+      <label for="courseCode">Course Code</label>
+      <input
+        class="form-control"
+        name="courseCode"
+        id="courseCode"
+        required
+      />
+      <label for="enrollmentPassword">Enrollment Password</label>
+      <input
+        class="form-control"
+        name="enrollmentPassword"
+        id="enrollmentPassword"
+        type="password"
+        required
+      />
+
+      <div class="btn-wrapper">
+        <input class="btn" type="submit" value="Enroll" />
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

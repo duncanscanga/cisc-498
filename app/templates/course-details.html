@@ -33,18 +33,42 @@
 
 <div id="assignments" class="container">
     <h2>Assignments:</h2>
-        {% for assignment in assignments %}
-        <ul>
-    <li>
-        <a href="/assignments/{{ assignment.id }}">{{ assignment.name }}</a>
-    </li>
-</ul>
+    {% for assignment in assignments %}
+    <ul>
+        <li>
+            <a href="/assignments/{{ assignment.id }}">{{ assignment.name }}</a>
+        </li>
+    </ul>
     {% endfor %}
 
     {% if user is defined and user.role == 3 %}
     <a href="/add-assignments/{{ course.id }}" class="btn">Add Assignment</a>
     {% endif %}
 </div>
+
+{% if user is defined and user.role == 3 %}
+<div id="users" class="container">
+    <h2>Users:</h2>
+    {% for u in users %}
+    <ul>
+        <li>
+            <a href="/users/{{ u.id }}">{{ u.username }}</a> ({{ u.student_number }}) 
+            {% if u is defined and u.role == 3 %}
+            (Instructor)
+            {% endif %}
+
+            {% if u is defined and u.role == 2 %}
+            (TA)
+            {% endif %}
+
+        </li>
+    </ul>
+    {% endfor %}
+    {% if user is defined and user.role == 3 %}
+    Share Code: {{course.enrollmentPassword}}
+    {% endif %}
+</div>
+{% endif %}
 
 
 

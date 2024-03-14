@@ -1,5 +1,5 @@
 from flask import render_template, request, session, redirect,  url_for, flash, send_from_directory
-from app.models import addSubmissionLog, addTestCaseLog, assign_to_course, create_assignment, create_course, find_assignments, find_courses, find_user_assignments, get_test_Cases, get_user_submissions_for_assignment, getAssignmentsById, getAssignmentsForCourse, getCourseById, login, Submission, User, register, remove_testcase, update_assignment_details, update_user
+from app.models import addSubmissionLog, addTestCaseLog, assign_to_course,Course, create_assignment, create_course, enrollInCourse, find_assignments, find_courses, find_user_assignments, get_test_Cases, get_user_submissions_for_assignment, getAssignmentsById, getAssignmentsForCourse, getCourseById, getUsersForCourse, login, Submission, User, register, remove_testcase, update_assignment_details, update_user
 from app import app
 from datetime import datetime
 from werkzeug.utils import secure_filename
@@ -267,10 +267,11 @@ def get_create_assignment(user):
 def get_course_details(user, courseId):
     course = getCourseById(courseId, user)
     assignments = getAssignmentsForCourse(courseId, user)
+    users = getUsersForCourse(courseId, user)
     if course == None:
         return redirect('/')
 
-    return render_template('course-details.html', user=user, course=course, assignments=assignments)
+    return render_template('course-details.html', users=users, user=user, course=course, assignments=assignments)
 
 @app.route('/assignments/<int:assignmentId>', methods=['GET'])
 @authenticate
@@ -340,6 +341,24 @@ def list_assignments(user, course_id):
     return render_template('select_assignment.html', user=user, assignments=assignments, course_id=course_id)
 
 
+
+@app.route('/enroll', methods=['GET', 'POST'])
+@authenticate
+def enroll_course(user):
+    if request.method == 'POST':
+        course_code = request.form['courseCode']
+        enrollment_password = request.form['enrollmentPassword']
+
+        result = enrollInCourse(course_code, enrollment_password, user)
+        if result:
+            return redirect('/')  # Redirect to a confirmation page or dashboard
+        else:
+            flash('Invalid course code or enrollment password.', 'danger')
+
+    # Render the enrollment form page if not POST or if there was an error
+    return render_template('course_enrollment.html', user=user)
+
+
 @app.route('/create-assignment', methods=['POST'])
 @authenticate
 def post_create_assignment(user):
@@ -368,7 +387,7 @@ def post_create_assignment(user):
     # Redirect based on the operation success
     if success:
         # Assuming you want to redirect to a page showing all courses or a confirmation page
-        return redirect('/')
+        return redirect('/assignments')
     else:
         # Stay on the create course page and show an error message
         return render_template('create-assignment.html', user=user, msg="Failed to create assignment.")
