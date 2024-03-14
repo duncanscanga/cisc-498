@@ -12,9 +12,14 @@
     <ul>
       {% for submission in submissions %}
       <li>
-        Assignment: {{ submission.assignmentId}} - 
+        Assignment: {{ submission.assignmentName}} - 
+        <br>
         Submitted on: {{ submission.submissionDate.strftime('%Y-%m-%d %H:%M:%S') }} - 
+        <br>
         File: <a href="{{ url_for('download_submission', assignment_id=submission.assignmentId, submission_id=submission.id) }}">{{ submission.fileName }}</a>
+        <br>
+         <a href="{{ url_for('view_grade', submission_id=submission.id) }}">View Grades</a>
+        <br>
       </li>
       {% endfor %}
     </ul>

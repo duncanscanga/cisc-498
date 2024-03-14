@@ -66,6 +66,7 @@ class Submission(db.Model):
     submissionDate = db.Column(db.DateTime, nullable=False)
     fileName = db.Column(db.String(500), nullable=False)
     overwritten = db.Column(db.Boolean, nullable=True)
+    assignmentName = db.Column(db.String(500), nullable=False)
 
     def __repr__(self):
         return "<Submission %r>" % self.id
@@ -331,7 +332,9 @@ def getSubmissions(course_id, user_id):
                                   .join(Assignment, Assignment.id == Submission.assignmentId)\
                                   .join(CourseAssignment, CourseAssignment.assignmentId == Assignment.id)\
                                   .filter(CourseAssignment.courseId == course_id)\
-                                  .all()
+                                  .order_by(Submission.submissionDate).all()
+    for submisison in submissions:
+        submisison.assignmentName = Assignment.query.filter(Assignment.id == submisison.assignmentId).first().name
     return submissions
 
 def get_test_Cases(isOwner, assignmentId):

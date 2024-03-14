@@ -55,6 +55,26 @@ def download_submission(user, assignment_id, submission_id):
             return make_response('File not found', 404)
     return 'Submission not found', 404
 
+@app.route('/view-grade/<int:submission_id>')
+@authenticate
+def view_grade(user, submission_id):
+    # Ensure that only authenticated users, TAs, and instructors can download submissions
+    if user.role not in [2, 3]:
+        #check if user is looking at its own work
+        submission = Submission.query.filter_by(id=submission_id).first()
+        if submission.userId != user.id:
+        # Forbidden access attempt
+            return make_response('Access denied', 403)
+    
+    submission = Submission.query.filter_by(id=submission_id).first()
+
+    student = findUserById(submission.userId)
+
+    return render_template('view-grades.html',
+                           message='', user=user, student=student )
+
+
+
 
 
 @app.route('/login', methods=['GET'])
@@ -364,11 +384,8 @@ def user_details(user, user_id, course_id):
         return ('/')
     
     student = findUserById(user_id)
-    print(student)
     course = getCourseById(course_id, user)
-    print(course)
     submissions = getSubmissions(course_id, user_id)
-    print(submissions)
 
     return render_template('user_details.html', student=student, user=user, course=course, submissions=submissions)
 
