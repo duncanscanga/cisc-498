@@ -1,5 +1,5 @@
-from flask import render_template, request, session, redirect,  url_for, flash, send_from_directory
-from app.models import addSubmissionLog, addTestCaseLog, assign_to_course,Course, create_assignment, create_course, enrollInCourse, find_assignments, find_courses, find_user_assignments, get_test_Cases, get_user_submissions_for_assignment, getAssignmentsById, getAssignmentsForCourse, getCourseById, getUsersForCourse, login, Submission, User, register, remove_testcase, update_assignment_details, update_user
+from flask import render_template, request, session, redirect,  url_for, flash, send_from_directory, abort, make_response
+from app.models import addSubmissionLog, addTestCaseLog, assign_to_course,Course, create_assignment, create_course, enrollInCourse, enrollTaInCourse, find_assignments, find_courses, find_user_assignments, findUserById, get_test_Cases, get_user_submissions_for_assignment, getAssignmentsById, getAssignmentsForCourse, getCourseById, getSubmissions, getUsersForCourse, login, Submission, User, register, remove_testcase, update_assignment_details, update_user
 from app import app
 from datetime import datetime
 from werkzeug.utils import secure_filename
@@ -32,12 +32,48 @@ def authenticate(inner_function):
 @app.route('/download-submission/<int:assignment_id>/<int:submission_id>')
 @authenticate
 def download_submission(user, assignment_id, submission_id):
-    submission = Submission.query.filter_by(id=submission_id, userId=user.id, assignmentId=assignment_id).first()
+    # Ensure that only authenticated users, TAs, and instructors can download submissions
+    if user.role not in [2, 3]:
+        #check if user is looking at its own work
+        submission = Submission.query.filter_by(id=submission_id, assignmentId=assignment_id).first()
+        if submission.userId != user.id:
+        # Forbidden access attempt
+            return make_response('Access denied', 403)
+
+    # Fetch the submission based on submission_id, user_id, and assignment_id
+    submission = Submission.query.filter_by(id=submission_id, assignmentId=assignment_id).first()
+    
     if submission:
-        # Assuming files are stored in UPLOAD_FOLDER/assignment-{assignment_id}/{filename}
-        directory = os.path.join(app.config['UPLOAD_FOLDER'], f'assignment-{assignment_id}')
-        return send_from_directory(directory, submission.fileName, as_attachment=True)
+        # Adjust the directory path to include the user-specific folder
+        directory = os.path.join(app.config['UPLOAD_FOLDER'], f'assignment-{assignment_id}', f'user-{submission.userId}')
+        
+        # Attempt to send the file from the directory
+        try:
+            return send_from_directory(directory, submission.fileName, as_attachment=True)
+        except FileNotFoundError:
+            # File not found
+            return make_response('File not found', 404)
     return 'Submission not found', 404
+
+@app.route('/view-grade/<int:submission_id>')
+@authenticate
+def view_grade(user, submission_id):
+    # Ensure that only authenticated users, TAs, and instructors can download submissions
+    if user.role not in [2, 3]:
+        #check if user is looking at its own work
+        submission = Submission.query.filter_by(id=submission_id).first()
+        if submission.userId != user.id:
+        # Forbidden access attempt
+            return make_response('Access denied', 403)
+    
+    submission = Submission.query.filter_by(id=submission_id).first()
+
+    student = findUserById(submission.userId)
+
+    return render_template('view-grades.html',
+                           message='', user=user, student=student )
+
+
 
 
 
@@ -340,6 +376,30 @@ def list_assignments(user, course_id):
     assignments = find_user_assignments(user.id)
     return render_template('select_assignment.html', user=user, assignments=assignments, course_id=course_id)
 
+@app.route('/users/<int:user_id>/<int:course_id>')
+@authenticate
+def user_details(user, user_id, course_id):
+    # Ensure only TAs and instructors can view this page
+    if user.role not in [2, 3]:
+        return ('/')
+    
+    student = findUserById(user_id)
+    course = getCourseById(course_id, user)
+    submissions = getSubmissions(course_id, user_id)
+
+    return render_template('user_details.html', student=student, user=user, course=course, submissions=submissions)
+
+
+@app.route('/add-ta/<int:course_id>', methods=['GET', 'POST'])
+@authenticate
+def add_ta(user, course_id):
+    course = getCourseById(course_id, user)
+    if request.method == 'POST':
+        ta_email = request.form['taEmail']
+        result = enrollTaInCourse(course_id, user, ta_email)
+        return redirect(f'/courses/{course_id}')
+    
+    return render_template('add_ta.html', user=user, course=course)
 
 
 @app.route('/enroll', methods=['GET', 'POST'])
@@ -393,8 +453,6 @@ def post_create_assignment(user):
         return render_template('create-assignment.html', user=user, msg="Failed to create assignment.")
 
 
-
-
 @app.route('/submit-assignment/<int:assignment_id>', methods=['POST'])
 @authenticate
 def submit_assignment(user, assignment_id):
@@ -412,21 +470,28 @@ def submit_assignment(user, assignment_id):
 
     if file:
         original_filename = secure_filename(file.filename)
-        # Append user ID to the filename before its extension
-        filename, file_extension = os.path.splitext(original_filename)
+        # Define the path for the assignment folder
         assignment_folder = os.path.join(app.config['UPLOAD_FOLDER'], f'assignment-{assignment_id}')
+        # Define the path for the user's folder within the assignment folder
+        user_folder = os.path.join(assignment_folder, f'user-{user.id}')
 
-        # Check if the assignment folder exists, create it if it doesn't
-        if not os.path.exists(assignment_folder):
-            os.makedirs(assignment_folder)
+        # Check if the user's folder exists within the assignment folder, create it if it doesn't
+        if not os.path.exists(user_folder):
+            os.makedirs(user_folder)
 
-        # Save the file in the assignment folder with the updated filename
-        file_path = os.path.join(assignment_folder, original_filename)
+        # Append user ID to the filename before its extension to ensure uniqueness
+        filename, file_extension = os.path.splitext(original_filename)
+        # unique_filename = f"{filename}_{user.id}{file_extension}"
+        unique_filename = f"{filename}{file_extension}"
+        
+        # Save the file in the user's folder within the assignment folder with the unique filename
+        file_path = os.path.join(user_folder, unique_filename)
         file.save(file_path)
         
         # Redirect or respond as necessary after file upload
         flash('File successfully uploaded')
-        addSubmissionLog(original_filename, user, assignment_id)
+        # Log the submission with the unique filename and path
+        addSubmissionLog(unique_filename, user, assignment_id)
         return redirect(f'/assignments/{assignment_id}')
     
     # Handle cases where file upload does not succeed
