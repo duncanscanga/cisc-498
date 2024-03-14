@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<link rel="stylesheet" href="../static/styles/add_ta.css" />
+
+<div class="container">
+  <h1>Add TA to {{ course.name }}</h1>
+  <form method="post" action="/add-ta/{{ course.id }}">
+    <div class="form-group">
+      <label for="taEmail">TA Email</label>
+      <input
+        class="form-control"
+        name="taEmail"
+        id="taEmail"
+        type="email"
+        required
+      />
+      <div class="btn-wrapper">
+        <input class="btn" type="submit" value="Add TA" />
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

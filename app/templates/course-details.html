@@ -46,13 +46,13 @@
     {% endif %}
 </div>
 
-{% if user is defined and user.role == 3 %}
+{% if user is defined and (user.role == 3 or user.role == 2)%}
 <div id="users" class="container">
     <h2>Users:</h2>
     {% for u in users %}
     <ul>
         <li>
-            <a href="/users/{{ u.id }}">{{ u.username }}</a> ({{ u.student_number }}) 
+            <a href="/users/{{ u.id }}/{{course.id}}">{{ u.username }}</a> ({{ u.student_number }}) 
             {% if u is defined and u.role == 3 %}
             (Instructor)
             {% endif %}
@@ -65,6 +65,7 @@
     </ul>
     {% endfor %}
     {% if user is defined and user.role == 3 %}
+    <a href="/add-ta/{{ course.id }}" class="btn">Add TA</a>
     Share Code: {{course.enrollmentPassword}}
     {% endif %}
 </div>

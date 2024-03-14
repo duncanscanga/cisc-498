@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<link rel="stylesheet" href="../static/styles/user_details.css" />
+
+<div class="container">
+  <h1>Student Details: {{ student.username }} ({{ student.student_number }})</h1>
+  <h2>Course: {{ course.name }} ({{ course.courseCode }})</h2>
+  
+  <div class="submissions">
+    <h3>Submissions:</h3>
+    {% if submissions %}
+    <ul>
+      {% for submission in submissions %}
+      <li>
+        Assignment: {{ submission.assignmentId}} - 
+        Submitted on: {{ submission.submissionDate.strftime('%Y-%m-%d %H:%M:%S') }} - 
+        File: <a href="{{ url_for('download_submission', assignment_id=submission.assignmentId, submission_id=submission.id) }}">{{ submission.fileName }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p>No submissions found for this course.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

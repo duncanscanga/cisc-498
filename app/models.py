@@ -65,6 +65,7 @@ class Submission(db.Model):
     userId = db.Column(db.Integer, nullable=False)
     submissionDate = db.Column(db.DateTime, nullable=False)
     fileName = db.Column(db.String(500), nullable=False)
+    overwritten = db.Column(db.Boolean, nullable=True)
 
     def __repr__(self):
         return "<Submission %r>" % self.id
@@ -197,6 +198,28 @@ def enrollInCourse(course_code, enrollment_password, user):
         return True
     return False
 
+def enrollTaInCourse(courseId, user, ta_email):
+    if user.role != 3:
+        return False
+    
+    course = Course.query.filter(Course.id == courseId).first()
+
+    user = User.query.filter(User.email == ta_email).first()
+    if course and user and user.role == 2:
+        user_course = UserCourse(courseId=course.id, userId=user.id, userRole=2)
+        db.session.add(user_course)
+        db.session.commit()
+        return True
+
+    return False
+
+
+
+def findUserById(user_id):
+    user = User.query.filter(User.id == user_id).first()
+    return user
+
+
 def getCourseById(courseId, user):
     #find course
     course = Course.query.filter(Course.id == courseId).all()
@@ -293,10 +316,23 @@ def create_course(name, course_code, year, semester, start_date, end_date, userI
     return True
 
 def addSubmissionLog(filename_with_user_id, user, assignment_id):
+    pastSubmissions = Submission.query.filter(and_( Submission.userId == user.id, Submission.assignmentId == assignment_id)).all()
+    print(pastSubmissions)
+    for pastSubmission in pastSubmissions:
+        #overwrite each past submission to only store the latest
+        pastSubmission.overwritten = True
     submission = Submission(assignmentId = assignment_id, userId=user.id, fileName=filename_with_user_id, submissionDate=func.now())
     db.session.add(submission)
     db.session.commit()
     return True
+
+def getSubmissions(course_id, user_id):
+    submissions = Submission.query.filter(Submission.userId == user_id)\
+                                  .join(Assignment, Assignment.id == Submission.assignmentId)\
+                                  .join(CourseAssignment, CourseAssignment.assignmentId == Assignment.id)\
+                                  .filter(CourseAssignment.courseId == course_id)\
+                                  .all()
+    return submissions
 
 def get_test_Cases(isOwner, assignmentId):
     testCases = []
