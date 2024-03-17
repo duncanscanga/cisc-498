@@ -427,6 +427,35 @@ def check(output, pattern, error_message, penalty):
         return penalty
     return 0
 
+
+
+def submit_to_moss(submission_directory):
+    # Define the path to the moss.pl script
+    moss_script_path = app.config['SCRIPTS_FOLDER']
+
+    file_path = os.path.join(moss_script_path, "moss.pl")
+    # Define your Moss user ID
+    user_id = 'your_moss_userid'
+    # Define the programming language of the submissions
+    language = 'c'  # Change this based on the assignment language
+
+    # Build the command to execute the Moss script with necessary arguments
+    command = ['perl', file_path, '-l', language, '-m', '10', '-d']
+    command += [f'{submission_directory}/*/*']
+
+    # Add your Moss user ID to the command
+    command.insert(2, f'-u {user_id}')
+
+    # Execute the command
+    result = subprocess.run(command, capture_output=True, text=True)
+
+    # The output will contain a URL to the results
+    if result.stdout:
+        print("Moss submission successful. Results at:", result.stdout)
+    else:
+        print("Error submitting to Moss:", result.stderr)
+
+
 def auto_grade(submission_path, assignment_id, submissionId):
     print("Retrieving submission record...")
     submission = Submission.query.filter_by(id=submissionId, assignmentId=assignment_id).first()

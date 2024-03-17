@@ -1,5 +1,5 @@
 from flask import render_template, request, session, redirect,  url_for, flash, send_from_directory, abort, make_response
-from app.models import addSubmissionLog, addTestCaseFileEntry, addTestCaseLog, TestCase, assign_to_course, TestCaseFile, Course, auto_grade, create_assignment, create_course, create_testcase, enrollInCourse, enrollTaInCourse, find_assignments, find_courses, find_user_assignments, findUserById, get_test_Cases, get_user_submissions_for_assignment, getAssignmentsById, getAssignmentsForCourse, getCourseById, getSubmissions, getUsersForCourse, login, Submission, User, register, remove_testcase, togglevisiblity, update_assignment_details, update_user
+from app.models import addSubmissionLog, addTestCaseFileEntry, addTestCaseLog, TestCase, assign_to_course, TestCaseFile, Course, auto_grade, create_assignment, create_course, create_testcase, enrollInCourse, enrollTaInCourse, find_assignments, find_courses, find_user_assignments, findUserById, get_test_Cases, get_user_submissions_for_assignment, getAssignmentsById, getAssignmentsForCourse, getCourseById, getSubmissions, getUsersForCourse, login, Submission, User, register, remove_testcase, submit_to_moss, togglevisiblity, update_assignment_details, update_user
 from app import app
 from datetime import datetime
 from werkzeug.utils import secure_filename
@@ -584,6 +584,27 @@ def upload_testcasefile(user, testcase_id, assignment_id):
     
     return 'File upload failed', 400
 
+
+@app.route('/confirm-assignment/<int:assignment_id>', methods=['GET'])
+@authenticate
+def confirm_assignment(assignment_id):
+    print("1000")
+    # Retrieve the directory where submissions for this assignment are stored
+    submission_directory = os.path.join(app.config['SUBMISSIONS_FOLDER'], f'assignment-{assignment_id}')
+    print("1001")
+    # Call the function to submit to Moss
+    result = submit_to_moss(submission_directory)
+    print("2001")
+    # You might want to do something with the result, like storing the Moss report URL
+    # For simplicity, just flash a message for now
+    if "Moss submission successful" in result:
+        print("1")
+        flash("Assignment submissions sent to Moss successfully.", "success")
+    else:
+        print("2")
+        flash("Failed to submit assignment submissions to Moss.", "error")
+    
+    return redirect(f'/assignments/{assignment_id}')
 
 @app.route('/upload-testcase/<int:assignment_id>', methods=['POST'])
 @authenticate
