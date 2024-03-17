@@ -1,10 +1,12 @@
 from app import app
 from flask_sqlalchemy import SQLAlchemy
+from flask import render_template, request, session, redirect,  url_for, flash, send_from_directory, abort, make_response
 from sqlalchemy import null, text, desc, asc, and_, or_, nullslast, cast, Float, func
 from validate_email import validate_email
 from datetime import date
 from secrets import token_urlsafe
-
+import subprocess
+import os
 
 '''
 This file defines data models and related business logics
@@ -91,10 +93,21 @@ class TestCase(db.Model):
     assignmentId = db.Column(db.Integer, nullable=False)
     userId = db.Column(db.Integer, nullable=False)
     submissionDate = db.Column(db.DateTime, nullable=False)
-    fileName = db.Column(db.String(550), nullable=False)
+    fileName = db.Column(db.String(550), nullable=True)
+    name = db.Column(db.String(550), nullable=True)
 
     def __repr__(self):
         return "<TestCase %r>" % self.id
+    
+
+class TestCaseFile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    testCaseId = db.Column(db.Integer, nullable=False)
+    assignmentId = db.Column(db.Integer, nullable=False)
+    fileName = db.Column(db.String(550), nullable=False)
+
+    def __repr__(self):
+        return "<TestCaseFile %r>" % self.id
 
 
 class User(db.Model):
@@ -119,6 +132,8 @@ class User(db.Model):
 
 # create all tables
 db.create_all()
+
+
 
 def get_user_submissions_for_assignment(user_id, assignment_id):
     return Submission.query.filter_by(userId=user_id, assignmentId=assignment_id).all()
@@ -325,7 +340,8 @@ def addSubmissionLog(filename_with_user_id, user, assignment_id):
     submission = Submission(assignmentId = assignment_id, userId=user.id, fileName=filename_with_user_id, submissionDate=func.now())
     db.session.add(submission)
     db.session.commit()
-    return True
+    db.session.flush() 
+    return submission.id
 
 def getSubmissions(course_id, user_id):
     submissions = Submission.query.filter(Submission.userId == user_id)\
@@ -346,10 +362,98 @@ def get_test_Cases(isOwner, assignmentId):
     return testCases
 
 def addTestCaseLog(filename_with_user_id, user, assignment_id, visible):
-    testCase = TestCase(assignmentId = assignment_id, visible=visible, userId=user.id, fileName=filename_with_user_id, submissionDate=func.now())
-    db.session.add(testCase)
-    db.session.commit()
+    test_case = TestCase(visible=visible, assignmentId=assignment_id, userId=user.id, submissionDate=func.now())
+    db.session.add(test_case)
+    db.session.flush()  # To get test_case.id for the new entry
+    # testCase = TestCase(assignmentId = assignment_id, visible=visible, userId=user.id, fileName=filename_with_user_id, submissionDate=func.now())
+    # db.session.add(testCase)
+    # db.session.commit()
     return True
+
+def togglevisiblity(test_case_id):
+    test_case = TestCase.query.filter_by(id=test_case_id).first()
+    if test_case:
+        test_case.visible = not test_case.visible
+        db.session.commit()
+
+def addTestCaseFileEntry(testcase_id, assignment_id, filename):
+    test_case_file = TestCaseFile(testCaseId=testcase_id, assignmentId=assignment_id, fileName=filename)
+    db.session.add(test_case_file)
+    db.session.commit()
+
+    return True
+
+def create_testcase(assignment_id, userId, visible=True):
+    # Query the number of existing TestCase objects for this assignmentId
+    existing_test_cases_count = TestCase.query.filter_by(assignmentId=assignment_id).count()
+    
+   
+    # Generate the new test case name
+    new_test_case_name = f"Test Case {existing_test_cases_count + 1}"
+    
+    # Create a new TestCase object
+    new_test_case = TestCase(
+        visible=visible,
+        assignmentId=assignment_id,
+        userId=userId,
+        submissionDate=func.now(),
+        # Assuming you add a 'name' field to TestCase for storing "Test Case _"
+        name=new_test_case_name  
+    )
+    
+    # Add the new TestCase to the database session and commit it
+    db.session.add(new_test_case)
+    db.session.commit()
+    print("here")
+    
+    return new_test_case
+
+def auto_grade(submission_path, assignment_id, submissionId):
+    # Retrieve the submission record from the database
+    submission = Submission.query.filter_by(id=submissionId, assignmentId=assignment_id).first()
+    
+    if not submission:
+        return make_response('Submission not found', 404)
+
+    # Compile the C code
+    compile_status = subprocess.run(["gcc", submission_path, "-o", f"{submission_path}_output"], capture_output=True)
+    if compile_status.returncode != 0:
+        # Compilation error
+        return {"status": "Compilation Error", "detail": compile_status.stderr.decode('utf-8')}
+
+    # Retrieve test cases for the assignment
+    test_cases = TestCase.query.filter_by(assignmentId=assignment_id).all()
+    total_cases = len(test_cases)
+    passed_cases = 0
+    testcase_folder = app.config['TESTCASE_FOLDER']
+    assignment_testcase_folder = os.path.join(testcase_folder, f'assignment-{assignment_id}')
+
+    for test_case in test_cases:
+        # Construct file path for input and expected output files
+        input_file_path = os.path.join(assignment_testcase_folder, test_case.fileName)
+        expected_output_file_path = input_file_path + "_expected"  # Update this as per your naming convention
+
+        # Read input and expected output from files
+        try:
+            with open(input_file_path, 'r') as input_file:
+                input_data = input_file.read()
+            with open(expected_output_file_path, 'r') as expected_output_file:
+                expected_output = expected_output_file.read()
+        except FileNotFoundError as e:
+            # Handle missing file
+            return make_response(f'Missing test case file: {e}', 404)
+
+        # Run the compiled code with test case input
+        run_status = subprocess.run([f"{submission_path}_output"], input=input_data, text=True, capture_output=True)
+
+        # Compare output with expected output
+        if run_status.stdout.strip() == expected_output.strip():
+            passed_cases += 1
+
+    # Calculate and return the score
+    score = (passed_cases / total_cases) * 100
+    return {"status": "Graded", "score": score}
+
 
 def assign_to_course(course_id, assignment_id, userId):
     courseAssignment = CourseAssignment(courseId = course_id, assignmentId=assignment_id)
