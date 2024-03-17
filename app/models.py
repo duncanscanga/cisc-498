@@ -7,6 +7,7 @@ from datetime import date
 from secrets import token_urlsafe
 import subprocess
 import os
+import re
 
 '''
 This file defines data models and related business logics
@@ -333,7 +334,6 @@ def create_course(name, course_code, year, semester, start_date, end_date, userI
 
 def addSubmissionLog(filename_with_user_id, user, assignment_id):
     pastSubmissions = Submission.query.filter(and_( Submission.userId == user.id, Submission.assignmentId == assignment_id)).all()
-    print(pastSubmissions)
     for pastSubmission in pastSubmissions:
         #overwrite each past submission to only store the latest
         pastSubmission.overwritten = True
@@ -408,52 +408,57 @@ def create_testcase(assignment_id, userId, visible=True):
     
     return new_test_case
 
+def compile_and_run_c_program(submission_path, input_text):
+    """Compiles and runs the C program at submission_path with given input, returning the output."""
+    # Compile the C program
+    compile_status = subprocess.run(["gcc", submission_path, "-o", submission_path + "_output"], capture_output=True)
+    if compile_status.returncode != 0:
+        print("Compilation Error:", compile_status.stderr.decode())
+        return None
+
+    # Run the compiled program
+    run_status = subprocess.run([submission_path + "_output"], input=input_text, text=True, capture_output=True)
+    return run_status.stdout
+
+def check(output, pattern, error_message, penalty):
+    """Checks if a pattern is present in the output. Returns a penalty if not found."""
+    if not re.search(pattern, output, flags=re.MULTILINE):
+        print(error_message)
+        return penalty
+    return 0
+
 def auto_grade(submission_path, assignment_id, submissionId):
-    # Retrieve the submission record from the database
+    print("Retrieving submission record...")
     submission = Submission.query.filter_by(id=submissionId, assignmentId=assignment_id).first()
-    
     if not submission:
         return make_response('Submission not found', 404)
-
-    # Compile the C code
-    compile_status = subprocess.run(["gcc", submission_path, "-o", f"{submission_path}_output"], capture_output=True)
-    if compile_status.returncode != 0:
-        # Compilation error
-        return {"status": "Compilation Error", "detail": compile_status.stderr.decode('utf-8')}
 
     # Retrieve test cases for the assignment
     test_cases = TestCase.query.filter_by(assignmentId=assignment_id).all()
     total_cases = len(test_cases)
     passed_cases = 0
-    testcase_folder = app.config['TESTCASE_FOLDER']
-    assignment_testcase_folder = os.path.join(testcase_folder, f'assignment-{assignment_id}')
-
+    
     for test_case in test_cases:
-        # Construct file path for input and expected output files
-        input_file_path = os.path.join(assignment_testcase_folder, test_case.fileName)
-        expected_output_file_path = input_file_path + "_expected"  # Update this as per your naming convention
+        print(f"Processing TestCase ID: {test_case.id}")
+        
+        # Assume test_case_files contains input text and expected patterns for this test case
+        test_case_files = TestCaseFile.query.filter_by(testCaseId=test_case.id).all()
+        input_text = ""  # You would populate this based on the contents of test_case_files
+        expected_patterns = []  # Populate with expected output patterns and associated penalties
 
-        # Read input and expected output from files
-        try:
-            with open(input_file_path, 'r') as input_file:
-                input_data = input_file.read()
-            with open(expected_output_file_path, 'r') as expected_output_file:
-                expected_output = expected_output_file.read()
-        except FileNotFoundError as e:
-            # Handle missing file
-            return make_response(f'Missing test case file: {e}', 404)
+        # Compile and run the C program with the test case input
+        output = compile_and_run_c_program(submission_path, input_text)
+        if output is None:
+            print("Failed to run the C program for TestCase ID:", test_case.id)
+            continue
 
-        # Run the compiled code with test case input
-        run_status = subprocess.run([f"{submission_path}_output"], input=input_data, text=True, capture_output=True)
-
-        # Compare output with expected output
-        if run_status.stdout.strip() == expected_output.strip():
-            passed_cases += 1
+        print("Output for TestCase ID:", test_case.id, ":\n", output)
+        for pattern, error_message, penalty in expected_patterns:
+            passed_cases += check(output, pattern, error_message, penalty)
 
     # Calculate and return the score
     score = (passed_cases / total_cases) * 100
     return {"status": "Graded", "score": score}
-
 
 def assign_to_course(course_id, assignment_id, userId):
     courseAssignment = CourseAssignment(courseId = course_id, assignmentId=assignment_id)
