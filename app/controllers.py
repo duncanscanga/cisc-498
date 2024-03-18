@@ -1,4 +1,4 @@
-from flask import render_template, render_template_string,request, session, redirect,  url_for, flash, send_from_directory, abort, make_response
+from flask import send_file, render_template, render_template_string,request, session, redirect,  url_for, flash, send_from_directory, abort, make_response
 from app.models import addSubmissionLog, addTestCaseFileEntry, addTestCaseLog, TestCase, assign_to_course, TestCaseFile, Course, auto_grade, create_assignment, create_course, create_testcase, enrollInCourse, enrollTaInCourse, find_assignments, find_courses, find_user_assignments, findUserById, get_test_Cases, get_user_submissions_for_assignment, getAssignmentsById, getAssignmentsForCourse, getCourseById, getSubmissions, getUsersForCourse, login, Submission, User, register, remove_testcase, submit_to_moss, togglevisiblity, update_assignment_details, update_user
 from app import app
 from datetime import datetime
@@ -111,7 +111,6 @@ def login_post():
 @authenticate
 def get_assignments(user):
     assignments = find_assignments(user)
-    print(assignments)
     return render_template('assignments.html',  assignments=assignments, user=user)
 
 
@@ -324,7 +323,7 @@ def get_assignment_details(user, assignmentId):
     for test_case in testCases:
         test_case.files = TestCaseFile.query.filter_by(testCaseId=test_case.id).all()
 
-    return render_template('assignment-details.html', testCases=testCases, submissions=submissions, isOwner=isOwner, user=user, assignment=assignment)
+    return render_template('assignment-details.html',  testCases=testCases, submissions=submissions, isOwner=isOwner, user=user, assignment=assignment)
 
 @app.route('/create-course', methods=['POST'])
 @authenticate
@@ -493,6 +492,11 @@ def submit_assignment(user, assignment_id):
         flash('No selected file')
         return redirect(request.url)
 
+    if not file.filename.endswith(".c"):
+        flash('Not a \'C\' file')
+        return redirect(request.url)
+
+
     if file:
         original_filename = secure_filename(file.filename)
         # Define the path for the assignment folder
@@ -585,33 +589,25 @@ def upload_testcasefile(user, testcase_id, assignment_id):
     return 'File upload failed', 400
 
 
-@app.route('/download-report/<int:assignment_id>', methods=['GET'])
-@authenticate
-def download_report(user, assignment_id):
-    submission_directory = os.path.join(app.config['UPLOAD_FOLDER'], f'assignment-{assignment_id}')
-    submit_to_moss(submission_directory)
-    directory = os.path.join(app.config['UPLOAD_FOLDER'], f'assignment-{assignment_id}')
-    try:
-        return send_from_directory(directory, "moss_report.html", as_attachment=False)
-    except FileNotFoundError:
-        return make_response('File not found', 404)
-
 @app.route('/confirm-assignment/<int:assignment_id>', methods=['GET'])
 @authenticate
 def confirm_assignment(user, assignment_id):
-    print("1000")
     submission_directory = os.path.join(app.config['UPLOAD_FOLDER'], f'assignment-{assignment_id}')
-    print("1001")
-    file = submit_to_moss(submission_directory)  # This should be modified to handle and show any possible error properly
-    print("2001")
+    file = submit_to_moss(submission_directory, assignment_id)  # This should be modified to handle and show any possible error properly
+    return redirect(f'/assignments/{assignment_id}')
 
-    # # Construct the URL for downloading or viewing the Moss report
-    # report_url = url_for('download_report', assignment_id=assignment_id, _external=True)
-
-    # Instead of trying to automatically open the report, display a link to the user
-    # The user can click this link to open the report in a new tab/window
-    return render_template('view-moss.html',
-                           file=file, user=user )
+@app.route('/view-report/<int:assignment_id>')
+@authenticate
+def view_report(user, assignment_id):
+    # Assuming `submit_to_moss` returns the absolute path to the report HTML file
+    file_path = submit_to_moss(os.path.join(app.config['UPLOAD_FOLDER'], f'assignment-{assignment_id}'))
+    
+    # Ensure the file exists and the user has the right to access it
+    if not os.path.exists(file_path):
+        return "Report not found.", 404
+    # Implement any necessary access control here
+    
+    return send_file(file_path)
 
 @app.route('/upload-testcase/<int:assignment_id>', methods=['POST'])
 @authenticate
