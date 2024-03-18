@@ -1,10 +1,14 @@
 from app import app
 from flask_sqlalchemy import SQLAlchemy
+from flask import render_template, request, session, redirect,  url_for, flash, send_from_directory, abort, make_response
 from sqlalchemy import null, text, desc, asc, and_, or_, nullslast, cast, Float, func
 from validate_email import validate_email
 from datetime import date
 from secrets import token_urlsafe
-
+import subprocess
+import os
+import re
+import mosspy
 
 '''
 This file defines data models and related business logics
@@ -91,10 +95,21 @@ class TestCase(db.Model):
     assignmentId = db.Column(db.Integer, nullable=False)
     userId = db.Column(db.Integer, nullable=False)
     submissionDate = db.Column(db.DateTime, nullable=False)
-    fileName = db.Column(db.String(550), nullable=False)
+    fileName = db.Column(db.String(550), nullable=True)
+    name = db.Column(db.String(550), nullable=True)
 
     def __repr__(self):
         return "<TestCase %r>" % self.id
+    
+
+class TestCaseFile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    testCaseId = db.Column(db.Integer, nullable=False)
+    assignmentId = db.Column(db.Integer, nullable=False)
+    fileName = db.Column(db.String(550), nullable=False)
+
+    def __repr__(self):
+        return "<TestCaseFile %r>" % self.id
 
 
 class User(db.Model):
@@ -119,6 +134,8 @@ class User(db.Model):
 
 # create all tables
 db.create_all()
+
+
 
 def get_user_submissions_for_assignment(user_id, assignment_id):
     return Submission.query.filter_by(userId=user_id, assignmentId=assignment_id).all()
@@ -318,14 +335,14 @@ def create_course(name, course_code, year, semester, start_date, end_date, userI
 
 def addSubmissionLog(filename_with_user_id, user, assignment_id):
     pastSubmissions = Submission.query.filter(and_( Submission.userId == user.id, Submission.assignmentId == assignment_id)).all()
-    print(pastSubmissions)
     for pastSubmission in pastSubmissions:
         #overwrite each past submission to only store the latest
         pastSubmission.overwritten = True
     submission = Submission(assignmentId = assignment_id, userId=user.id, fileName=filename_with_user_id, submissionDate=func.now())
     db.session.add(submission)
     db.session.commit()
-    return True
+    db.session.flush() 
+    return submission.id
 
 def getSubmissions(course_id, user_id):
     submissions = Submission.query.filter(Submission.userId == user_id)\
@@ -346,10 +363,180 @@ def get_test_Cases(isOwner, assignmentId):
     return testCases
 
 def addTestCaseLog(filename_with_user_id, user, assignment_id, visible):
-    testCase = TestCase(assignmentId = assignment_id, visible=visible, userId=user.id, fileName=filename_with_user_id, submissionDate=func.now())
-    db.session.add(testCase)
-    db.session.commit()
+    test_case = TestCase(visible=visible, assignmentId=assignment_id, userId=user.id, submissionDate=func.now())
+    db.session.add(test_case)
+    db.session.flush()  # To get test_case.id for the new entry
+    # testCase = TestCase(assignmentId = assignment_id, visible=visible, userId=user.id, fileName=filename_with_user_id, submissionDate=func.now())
+    # db.session.add(testCase)
+    # db.session.commit()
     return True
+
+def togglevisiblity(test_case_id):
+    test_case = TestCase.query.filter_by(id=test_case_id).first()
+    if test_case:
+        test_case.visible = not test_case.visible
+        db.session.commit()
+
+def addTestCaseFileEntry(testcase_id, assignment_id, filename):
+    test_case_file = TestCaseFile(testCaseId=testcase_id, assignmentId=assignment_id, fileName=filename)
+    db.session.add(test_case_file)
+    db.session.commit()
+
+    return True
+
+def create_testcase(assignment_id, userId, visible=True):
+    # Query the number of existing TestCase objects for this assignmentId
+    existing_test_cases_count = TestCase.query.filter_by(assignmentId=assignment_id).count()
+    
+   
+    # Generate the new test case name
+    new_test_case_name = f"Test Case {existing_test_cases_count + 1}"
+    
+    # Create a new TestCase object
+    new_test_case = TestCase(
+        visible=visible,
+        assignmentId=assignment_id,
+        userId=userId,
+        submissionDate=func.now(),
+        # Assuming you add a 'name' field to TestCase for storing "Test Case _"
+        name=new_test_case_name  
+    )
+    
+    # Add the new TestCase to the database session and commit it
+    db.session.add(new_test_case)
+    db.session.commit()
+    print("here")
+    
+    return new_test_case
+
+def compile_and_run_c_program(submission_path, input_text):
+    """Compiles and runs the C program at submission_path with given input, returning the output."""
+    # Compile the C program
+    compile_status = subprocess.run(["gcc", submission_path, "-o", submission_path + "_output"], capture_output=True)
+    if compile_status.returncode != 0:
+        print("Compilation Error:", compile_status.stderr.decode())
+        return None
+
+    # Run the compiled program
+    run_status = subprocess.run([submission_path + "_output"], input=input_text, text=True, capture_output=True)
+    return run_status.stdout
+
+def check(output, pattern, error_message, penalty):
+    """Checks if a pattern is present in the output. Returns a penalty if not found."""
+    if not re.search(pattern, output, flags=re.MULTILINE):
+        print(error_message)
+        return penalty
+    return 0
+
+
+
+def submit_to_moss2(submission_directory):
+    # Define the path to the moss.pl script
+    moss_script_path = app.config['SCRIPTS_FOLDER']
+
+    file_path = os.path.join(moss_script_path, "moss.pl")
+    # Define your Moss user ID
+    user_id = 'your_moss_userid'
+    # Define the programming language of the submissions
+    language = 'c'  # Change this based on the assignment language
+
+    # Build the command to execute the Moss script with necessary arguments
+    command = ['perl', file_path, '-l', language, '-m', '10', '-d']
+    command += [f'{submission_directory}/*/*']
+
+    # Add your Moss user ID to the command
+    command.insert(2, f'-u {user_id}')
+
+    # Execute the command
+    result = subprocess.run(command, capture_output=True, text=True)
+
+    # The output will contain a URL to the results
+    if result.stdout:
+        print("Moss submission successful. Results at:", result.stdout)
+    else:
+        print("Error submitting to Moss:", result.stderr)
+
+def submit_to_moss(submission_directory):
+    print("here")
+    userid = 732044316  # Your Moss user ID
+
+    m = mosspy.Moss(userid, "c")  # Specify "c" for C language
+    print("here2")
+
+    # Optional: Add base files if there are any common files across all submissions
+    # Base files are typically those provided as part of the assignment instructions
+    # m.addBaseFile("/path/to/basefile1.c")
+    # m.addBaseFile("/path/to/basefile2.c")
+
+    # Add all student submission files from the specified directory
+    print("here3")
+    for root, dirs, files in os.walk(submission_directory):
+        for file in files:
+            
+            if file.endswith(".c"):  # Ensure only C files are added
+                full_path = os.path.join(root, file)
+                print(full_path)
+                m.addFile(full_path)
+
+    print("here4")
+
+    # Send the files to Moss
+    try:
+        url = m.send(lambda file_path, display_name: print('*', end='', flush=True))
+    except Exception as e:
+        print(f"Error sending files to Moss: {e}")
+    print("\nReport Url: " + url)
+
+    print("here5")
+    print(url)
+
+    # Save the Moss report's webpage
+    report_file_path = os.path.join(submission_directory, "moss_report.html")
+    m.saveWebPage(url, report_file_path)
+    print(f"Report saved to: {report_file_path}")
+
+    print("here56")
+
+    # Download the full report locally including code comparison links
+    report_directory = os.path.join(submission_directory, "moss_report")
+    mosspy.download_report(url, report_directory, connections=8, log_level=10, on_read=lambda url: print('*', end='', flush=True))
+    print(f"\nFull report downloaded to: {report_directory}")
+    print("here57")
+    return report_file_path
+
+
+def auto_grade(submission_path, assignment_id, submissionId):
+    print("Retrieving submission record...")
+    submission = Submission.query.filter_by(id=submissionId, assignmentId=assignment_id).first()
+    if not submission:
+        return make_response('Submission not found', 404)
+
+    # Retrieve test cases for the assignment
+    test_cases = TestCase.query.filter_by(assignmentId=assignment_id).all()
+    total_cases = len(test_cases)
+    passed_cases = 0
+    
+    for test_case in test_cases:
+        print(f"Processing TestCase ID: {test_case.id}")
+        
+        # Assume test_case_files contains input text and expected patterns for this test case
+        test_case_files = TestCaseFile.query.filter_by(testCaseId=test_case.id).all()
+        input_text = ""  # You would populate this based on the contents of test_case_files
+        expected_patterns = []  # Populate with expected output patterns and associated penalties
+
+        # Compile and run the C program with the test case input
+        output = compile_and_run_c_program(submission_path, input_text)
+        if output is None:
+            print("Failed to run the C program for TestCase ID:", test_case.id)
+            continue
+
+        print("Output for TestCase ID:", test_case.id, ":\n", output)
+        for pattern, error_message, penalty in expected_patterns:
+            passed_cases += check(output, pattern, error_message, penalty)
+
+    # Calculate and return the score
+    score = (passed_cases / total_cases) * 100
+    return {"status": "Graded", "score": score}
 
 def assign_to_course(course_id, assignment_id, userId):
     courseAssignment = CourseAssignment(courseId = course_id, assignmentId=assignment_id)

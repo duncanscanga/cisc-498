@@ -1,5 +1,5 @@
-from flask import render_template, request, session, redirect,  url_for, flash, send_from_directory, abort, make_response
-from app.models import addSubmissionLog, addTestCaseLog, assign_to_course,Course, create_assignment, create_course, enrollInCourse, enrollTaInCourse, find_assignments, find_courses, find_user_assignments, findUserById, get_test_Cases, get_user_submissions_for_assignment, getAssignmentsById, getAssignmentsForCourse, getCourseById, getSubmissions, getUsersForCourse, login, Submission, User, register, remove_testcase, update_assignment_details, update_user
+from flask import render_template, render_template_string,request, session, redirect,  url_for, flash, send_from_directory, abort, make_response
+from app.models import addSubmissionLog, addTestCaseFileEntry, addTestCaseLog, TestCase, assign_to_course, TestCaseFile, Course, auto_grade, create_assignment, create_course, create_testcase, enrollInCourse, enrollTaInCourse, find_assignments, find_courses, find_user_assignments, findUserById, get_test_Cases, get_user_submissions_for_assignment, getAssignmentsById, getAssignmentsForCourse, getCourseById, getSubmissions, getUsersForCourse, login, Submission, User, register, remove_testcase, submit_to_moss, togglevisiblity, update_assignment_details, update_user
 from app import app
 from datetime import datetime
 from werkzeug.utils import secure_filename
@@ -313,13 +313,18 @@ def get_course_details(user, courseId):
 @authenticate
 def get_assignment_details(user, assignmentId):
     assignment = getAssignmentsById(assignmentId, user)
-    if assignment == None:
+    if assignment is None:
         return redirect('/')
 
     isOwner = assignment.createdBy == user.id
     submissions = get_user_submissions_for_assignment(user.id, assignmentId)
-    testCases = get_test_Cases(isOwner,assignmentId )
-    return render_template('assignment-details.html', testCases=testCases, submissions=submissions,isOwner=isOwner, user=user, assignment=assignment)
+    testCases = get_test_Cases(isOwner, assignmentId)
+
+    # Fetch related TestCaseFile entries for each test case
+    for test_case in testCases:
+        test_case.files = TestCaseFile.query.filter_by(testCaseId=test_case.id).all()
+
+    return render_template('assignment-details.html', testCases=testCases, submissions=submissions, isOwner=isOwner, user=user, assignment=assignment)
 
 @app.route('/create-course', methods=['POST'])
 @authenticate
@@ -451,6 +456,26 @@ def post_create_assignment(user):
     else:
         # Stay on the create course page and show an error message
         return render_template('create-assignment.html', user=user, msg="Failed to create assignment.")
+    
+@app.route('/create-testcase/<int:assignment_id>', methods=['POST'])
+@authenticate
+def post_create_testcase(user, assignment_id):
+    # Ensure the user creating the course is an instructor
+    if user.role != 3:
+        return redirect('/')
+    
+    success = create_testcase(assignment_id, user.id)
+
+    # Redirect based on the operation success
+    if success:
+        # Assuming you want to redirect to a page showing all courses or a confirmation page
+        return redirect(f'/assignments/{assignment_id}')
+    else:
+        # Stay on the create course page and show an error message
+        return redirect(f'/assignments/{assignment_id}')
+    
+
+
 
 
 @app.route('/submit-assignment/<int:assignment_id>', methods=['POST'])
@@ -491,12 +516,102 @@ def submit_assignment(user, assignment_id):
         # Redirect or respond as necessary after file upload
         flash('File successfully uploaded')
         # Log the submission with the unique filename and path
-        addSubmissionLog(unique_filename, user, assignment_id)
+        submission = addSubmissionLog(unique_filename, user, assignment_id)
+        # After saving the file, call the auto-grading function
+        print("here")
+        grading_result = auto_grade(file_path, assignment_id, submission)
+        print("here2")
+        
+        # You can now use grading_result to update the submission record, notify the user, etc.
+        # For example:
+        if grading_result['status'] == 'Graded':
+            flash(f"Assignment graded. Score: {grading_result['score']}")
+        else:
+            flash(f"Grading failed: {grading_result['detail']}", 'error')
+        
         return redirect(f'/assignments/{assignment_id}')
     
-    # Handle cases where file upload does not succeed
     return 'File upload failed', 400
 
+
+@app.route('/toggle-visibility/<int:assignment_id>/<int:test_case_id>', methods=['POST'])
+@authenticate
+def toggle_visibility(user, assignment_id, test_case_id):
+    # Ensure user is authorized to edit the assignment/test case (e.g., is the instructor)
+    if user.role != 3:
+        flash("You are not authorized to perform this action.")
+        return redirect(url_for('get_assignment_details', assignmentId=assignment_id))
+
+    # Find the test case and toggle its visibility
+    togglevisiblity(test_case_id)
+    
+
+    return redirect(url_for('get_assignment_details', assignmentId=assignment_id))
+
+
+@app.route('/upload-testcase-file/<int:testcase_id>/<int:assignment_id>', methods=['POST'])
+@authenticate
+def upload_testcasefile(user, testcase_id, assignment_id):
+    if 'testcase_file' not in request.files:
+        flash('No file part')
+        return redirect(request.url)
+    file = request.files['testcase_file']
+    if file.filename == '':
+        flash('No selected file')
+        return redirect(request.url)
+    if file:
+        filename = secure_filename(file.filename)
+        testcase_folder = app.config['TESTCASE_FOLDER']
+        
+        # Ensure base testcase folder exists
+        os.makedirs(testcase_folder, exist_ok=True)
+        
+        # Construct the path for the assignment's test case folder
+        assignment_testcase_folder = os.path.join(testcase_folder, f'assignment-{assignment_id}', f'testcase-{testcase_id}')
+        # Ensure the specific test case folder exists, create if not
+        os.makedirs(assignment_testcase_folder, exist_ok=True)
+        
+        # Update file_path to include the specific test case folder
+        file_path = os.path.join(assignment_testcase_folder, filename)
+        file.save(file_path)
+
+        # Assuming addTestCaseLog() is adapted to handle the TestCaseFile model creation
+        # This function or a similar one should create a TestCaseFile entry linked to the testcase_id
+        addTestCaseFileEntry(testcase_id, assignment_id, filename)
+
+        flash('Test case file successfully uploaded')
+        return redirect(f'/assignments/{assignment_id}')
+    
+    return 'File upload failed', 400
+
+
+@app.route('/download-report/<int:assignment_id>', methods=['GET'])
+@authenticate
+def download_report(user, assignment_id):
+    submission_directory = os.path.join(app.config['UPLOAD_FOLDER'], f'assignment-{assignment_id}')
+    submit_to_moss(submission_directory)
+    directory = os.path.join(app.config['UPLOAD_FOLDER'], f'assignment-{assignment_id}')
+    try:
+        return send_from_directory(directory, "moss_report.html", as_attachment=False)
+    except FileNotFoundError:
+        return make_response('File not found', 404)
+
+@app.route('/confirm-assignment/<int:assignment_id>', methods=['GET'])
+@authenticate
+def confirm_assignment(user, assignment_id):
+    print("1000")
+    submission_directory = os.path.join(app.config['UPLOAD_FOLDER'], f'assignment-{assignment_id}')
+    print("1001")
+    file = submit_to_moss(submission_directory)  # This should be modified to handle and show any possible error properly
+    print("2001")
+
+    # # Construct the URL for downloading or viewing the Moss report
+    # report_url = url_for('download_report', assignment_id=assignment_id, _external=True)
+
+    # Instead of trying to automatically open the report, display a link to the user
+    # The user can click this link to open the report in a new tab/window
+    return render_template('view-moss.html',
+                           file=file, user=user )
 
 @app.route('/upload-testcase/<int:assignment_id>', methods=['POST'])
 @authenticate
@@ -515,17 +630,18 @@ def upload_testcase(user, assignment_id):
         # Ensure directory exists
         os.makedirs(testcase_folder, exist_ok=True)
         
-        # Assuming each assignment's test cases are stored in a specific subdirectory
+        # Save file
         assignment_testcase_folder = os.path.join(testcase_folder, f'assignment-{assignment_id}')
         os.makedirs(assignment_testcase_folder, exist_ok=True)
-        
         file_path = os.path.join(assignment_testcase_folder, filename)
         file.save(file_path)
 
         visible = 'visible' in request.form and request.form['visible'] == 'true'
         
-        flash('Test case file successfully uploaded')
+        # Create or update TestCase and TestCaseFile entries
         addTestCaseLog(filename, user, assignment_id, visible)
+
+        flash('Test case file successfully uploaded')
         return redirect(f'/assignments/{assignment_id}')
     
     return 'File upload failed', 400

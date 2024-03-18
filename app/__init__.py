@@ -27,8 +27,10 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite"
 
 UPLOAD_FOLDER = os.path.join(package_dir, 'uploads')
 TESTCASE_FOLDER = os.path.join(package_dir, 'tests')
+SCRIPTS_FOLDER = os.path.join(package_dir, 'Scripts')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['TESTCASE_FOLDER'] = TESTCASE_FOLDER
+app.config['SCRIPTS_FOLDER'] = SCRIPTS_FOLDER
 
 # Temporary for testing, add proper secret key in .env file later
 app.config['SECRET_KEY'] = "UhzAQJY9PH"
