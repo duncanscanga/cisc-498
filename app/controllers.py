@@ -1,4 +1,4 @@
-from flask import render_template, request, session, redirect,  url_for, flash, send_from_directory, abort, make_response
+from flask import render_template, render_template_string,request, session, redirect,  url_for, flash, send_from_directory, abort, make_response
 from app.models import addSubmissionLog, addTestCaseFileEntry, addTestCaseLog, TestCase, assign_to_course, TestCaseFile, Course, auto_grade, create_assignment, create_course, create_testcase, enrollInCourse, enrollTaInCourse, find_assignments, find_courses, find_user_assignments, findUserById, get_test_Cases, get_user_submissions_for_assignment, getAssignmentsById, getAssignmentsForCourse, getCourseById, getSubmissions, getUsersForCourse, login, Submission, User, register, remove_testcase, submit_to_moss, togglevisiblity, update_assignment_details, update_user
 from app import app
 from datetime import datetime
@@ -585,26 +585,33 @@ def upload_testcasefile(user, testcase_id, assignment_id):
     return 'File upload failed', 400
 
 
+@app.route('/download-report/<int:assignment_id>', methods=['GET'])
+@authenticate
+def download_report(user, assignment_id):
+    submission_directory = os.path.join(app.config['UPLOAD_FOLDER'], f'assignment-{assignment_id}')
+    submit_to_moss(submission_directory)
+    directory = os.path.join(app.config['UPLOAD_FOLDER'], f'assignment-{assignment_id}')
+    try:
+        return send_from_directory(directory, "moss_report.html", as_attachment=False)
+    except FileNotFoundError:
+        return make_response('File not found', 404)
+
 @app.route('/confirm-assignment/<int:assignment_id>', methods=['GET'])
 @authenticate
-def confirm_assignment(assignment_id):
+def confirm_assignment(user, assignment_id):
     print("1000")
-    # Retrieve the directory where submissions for this assignment are stored
-    submission_directory = os.path.join(app.config['SUBMISSIONS_FOLDER'], f'assignment-{assignment_id}')
+    submission_directory = os.path.join(app.config['UPLOAD_FOLDER'], f'assignment-{assignment_id}')
     print("1001")
-    # Call the function to submit to Moss
-    result = submit_to_moss(submission_directory)
+    file = submit_to_moss(submission_directory)  # This should be modified to handle and show any possible error properly
     print("2001")
-    # You might want to do something with the result, like storing the Moss report URL
-    # For simplicity, just flash a message for now
-    if "Moss submission successful" in result:
-        print("1")
-        flash("Assignment submissions sent to Moss successfully.", "success")
-    else:
-        print("2")
-        flash("Failed to submit assignment submissions to Moss.", "error")
-    
-    return redirect(f'/assignments/{assignment_id}')
+
+    # # Construct the URL for downloading or viewing the Moss report
+    # report_url = url_for('download_report', assignment_id=assignment_id, _external=True)
+
+    # Instead of trying to automatically open the report, display a link to the user
+    # The user can click this link to open the report in a new tab/window
+    return render_template('view-moss.html',
+                           file=file, user=user )
 
 @app.route('/upload-testcase/<int:assignment_id>', methods=['POST'])
 @authenticate

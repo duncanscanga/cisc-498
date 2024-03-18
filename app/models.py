@@ -8,6 +8,7 @@ from secrets import token_urlsafe
 import subprocess
 import os
 import re
+import mosspy
 
 '''
 This file defines data models and related business logics
@@ -429,7 +430,7 @@ def check(output, pattern, error_message, penalty):
 
 
 
-def submit_to_moss(submission_directory):
+def submit_to_moss2(submission_directory):
     # Define the path to the moss.pl script
     moss_script_path = app.config['SCRIPTS_FOLDER']
 
@@ -454,6 +455,54 @@ def submit_to_moss(submission_directory):
         print("Moss submission successful. Results at:", result.stdout)
     else:
         print("Error submitting to Moss:", result.stderr)
+
+def submit_to_moss(submission_directory):
+    print("here")
+    userid = 732044316  # Your Moss user ID
+
+    m = mosspy.Moss(userid, "c")  # Specify "c" for C language
+    print("here2")
+
+    # Optional: Add base files if there are any common files across all submissions
+    # Base files are typically those provided as part of the assignment instructions
+    # m.addBaseFile("/path/to/basefile1.c")
+    # m.addBaseFile("/path/to/basefile2.c")
+
+    # Add all student submission files from the specified directory
+    print("here3")
+    for root, dirs, files in os.walk(submission_directory):
+        for file in files:
+            
+            if file.endswith(".c"):  # Ensure only C files are added
+                full_path = os.path.join(root, file)
+                print(full_path)
+                m.addFile(full_path)
+
+    print("here4")
+
+    # Send the files to Moss
+    try:
+        url = m.send(lambda file_path, display_name: print('*', end='', flush=True))
+    except Exception as e:
+        print(f"Error sending files to Moss: {e}")
+    print("\nReport Url: " + url)
+
+    print("here5")
+    print(url)
+
+    # Save the Moss report's webpage
+    report_file_path = os.path.join(submission_directory, "moss_report.html")
+    m.saveWebPage(url, report_file_path)
+    print(f"Report saved to: {report_file_path}")
+
+    print("here56")
+
+    # Download the full report locally including code comparison links
+    report_directory = os.path.join(submission_directory, "moss_report")
+    mosspy.download_report(url, report_directory, connections=8, log_level=10, on_read=lambda url: print('*', end='', flush=True))
+    print(f"\nFull report downloaded to: {report_directory}")
+    print("here57")
+    return report_file_path
 
 
 def auto_grade(submission_path, assignment_id, submissionId):
