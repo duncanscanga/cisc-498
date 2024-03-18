@@ -19,6 +19,15 @@
     <div class="detail-item">
         <strong>End Date:</strong> {{ assignment.endDate}}
     </div>
+
+    {% if isOwner %}
+    <!-- Plagiarism Check Button for Owners -->
+    <a href="{{ url_for('confirm_assignment', assignment_id=assignment.id) }}" class="btn">Check Submissions for Plagiarism</a>
+    {% if assignment.mossUrl %}
+    <a href="{{assignment.mossUrl}}" target="_blank" class="btn">View Last Moss Report</a>
+    {% endif %}
+    {% endif %}
+
     
     {% if isOwner %}
     <div id="test-cases">
@@ -70,7 +79,7 @@
     </div>
 
     <form action="/submit-assignment/{{ assignment.id }}" method="post" enctype="multipart/form-data">
-        <input type="file" name="assignment_file" required>
+        <input type="file" name="assignment_file" accept=".c, text/plain" required>
         <button type="submit" class="btn">Submit Assignment</button>
     </form>
     {% endif %}

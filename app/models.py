@@ -27,6 +27,7 @@ class Assignment(db.Model):
     startDate = db.Column(db.DateTime, nullable=True)
     endDate = db.Column(db.DateTime, nullable=True)
     createdBy = db.Column(db.Integer, nullable=True)
+    mossUrl = db.Column(db.String(800), nullable=True)
 
     def __repr__(self):
         return "<Assignment %r>" % self.id
@@ -405,7 +406,6 @@ def create_testcase(assignment_id, userId, visible=True):
     # Add the new TestCase to the database session and commit it
     db.session.add(new_test_case)
     db.session.commit()
-    print("here")
     
     return new_test_case
 
@@ -456,7 +456,7 @@ def submit_to_moss2(submission_directory):
     else:
         print("Error submitting to Moss:", result.stderr)
 
-def submit_to_moss(submission_directory):
+def submit_to_moss(submission_directory, assignmentId):
     print("here")
     userid = 732044316  # Your Moss user ID
 
@@ -472,9 +472,10 @@ def submit_to_moss(submission_directory):
     print("here3")
     for root, dirs, files in os.walk(submission_directory):
         for file in files:
-            
+            print(file)
             if file.endswith(".c"):  # Ensure only C files are added
                 full_path = os.path.join(root, file)
+                print("inside:")
                 print(full_path)
                 m.addFile(full_path)
 
@@ -487,22 +488,27 @@ def submit_to_moss(submission_directory):
         print(f"Error sending files to Moss: {e}")
     print("\nReport Url: " + url)
 
-    print("here5")
-    print(url)
+    # print("here5")
+    # print(url)
 
-    # Save the Moss report's webpage
-    report_file_path = os.path.join(submission_directory, "moss_report.html")
-    m.saveWebPage(url, report_file_path)
-    print(f"Report saved to: {report_file_path}")
+    # # Save the Moss report's webpage
+    # report_file_path = os.path.join(submission_directory, "moss_report.html")
+    # m.saveWebPage(url, report_file_path)
+    # print(f"Report saved to: {report_file_path}")
 
-    print("here56")
+    # print("here56")
 
-    # Download the full report locally including code comparison links
-    report_directory = os.path.join(submission_directory, "moss_report")
-    mosspy.download_report(url, report_directory, connections=8, log_level=10, on_read=lambda url: print('*', end='', flush=True))
-    print(f"\nFull report downloaded to: {report_directory}")
-    print("here57")
-    return report_file_path
+    # # Download the full report locally including code comparison links
+    # report_directory = os.path.join(submission_directory, "moss_report")
+    # mosspy.download_report(url, report_directory, connections=8, log_level=10, on_read=lambda url: print('*', end='', flush=True))
+    # print(f"\nFull report downloaded to: {report_directory}")
+    # print("here57")
+
+    assignmnet = Assignment.query.filter(Assignment.id == assignmentId).first()
+    assignmnet.mossUrl = url
+    db.session.commit()
+
+    return url
 
 
 def auto_grade(submission_path, assignment_id, submissionId):
