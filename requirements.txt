@@ -8,3 +8,4 @@ selenium
 seleniumbase
 pymysql
 mosspy
+nostril
