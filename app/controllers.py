@@ -75,8 +75,6 @@ def view_grade(user, submission_id):
 
 
 
-
-
 @app.route('/login', methods=['GET'])
 def login_get():
     return render_template('login.html',
@@ -523,7 +521,7 @@ def submit_assignment(user, assignment_id):
         submission = addSubmissionLog(unique_filename, user, assignment_id)
         # After saving the file, call the auto-grading function
         print("here")
-        grading_result = auto_grade(file_path, assignment_id, submission)
+        grading_result = auto_grade(file_path, assignment_id, submission )
         print("here2")
         
         # You can now use grading_result to update the submission record, notify the user, etc.

@@ -22,13 +22,14 @@
 
     {% if isOwner %}
     <!-- Plagiarism Check Button for Owners -->
-    <a href="{{ url_for('confirm_assignment', assignment_id=assignment.id) }}" class="btn">Check Submissions for Plagiarism</a>
+    <a href="{{ url_for('confirm_assignment', assignment_id=assignment.id) }}" class="btn">Check Submissions for
+        Plagiarism</a>
     {% if assignment.mossUrl %}
     <a href="{{assignment.mossUrl}}" target="_blank" class="btn">View Last Moss Report</a>
     {% endif %}
     {% endif %}
 
-    
+
     {% if isOwner %}
     <div id="test-cases">
         <h2>Test Cases:</h2>

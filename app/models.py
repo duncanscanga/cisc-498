@@ -9,6 +9,8 @@ import subprocess
 import os
 import re
 import mosspy
+import nonsense
+
 
 '''
 This file defines data models and related business logics
@@ -409,52 +411,23 @@ def create_testcase(assignment_id, userId, visible=True):
     
     return new_test_case
 
+
 def compile_and_run_c_program(submission_path, input_text):
-    """Compiles and runs the C program at submission_path with given input, returning the output."""
-    # Compile the C program
-    compile_status = subprocess.run(["gcc", submission_path, "-o", submission_path + "_output"], capture_output=True)
+    compile_status = subprocess.run(["gcc", submission_path, "-o", "program_output"], capture_output=True)
     if compile_status.returncode != 0:
         print("Compilation Error:", compile_status.stderr.decode())
         return None
-
-    # Run the compiled program
-    run_status = subprocess.run([submission_path + "_output"], input=input_text, text=True, capture_output=True)
+    
+    run_status = subprocess.run(["./program_output"], input=input_text, text=True, capture_output=True)
     return run_status.stdout
 
 def check(output, pattern, error_message, penalty):
-    """Checks if a pattern is present in the output. Returns a penalty if not found."""
     if not re.search(pattern, output, flags=re.MULTILINE):
         print(error_message)
         return penalty
     return 0
 
 
-
-def submit_to_moss2(submission_directory):
-    # Define the path to the moss.pl script
-    moss_script_path = app.config['SCRIPTS_FOLDER']
-
-    file_path = os.path.join(moss_script_path, "moss.pl")
-    # Define your Moss user ID
-    user_id = 'your_moss_userid'
-    # Define the programming language of the submissions
-    language = 'c'  # Change this based on the assignment language
-
-    # Build the command to execute the Moss script with necessary arguments
-    command = ['perl', file_path, '-l', language, '-m', '10', '-d']
-    command += [f'{submission_directory}/*/*']
-
-    # Add your Moss user ID to the command
-    command.insert(2, f'-u {user_id}')
-
-    # Execute the command
-    result = subprocess.run(command, capture_output=True, text=True)
-
-    # The output will contain a URL to the results
-    if result.stdout:
-        print("Moss submission successful. Results at:", result.stdout)
-    else:
-        print("Error submitting to Moss:", result.stderr)
 
 def submit_to_moss(submission_directory, assignmentId):
     print("here")
@@ -463,13 +436,6 @@ def submit_to_moss(submission_directory, assignmentId):
     m = mosspy.Moss(userid, "c")  # Specify "c" for C language
     print("here2")
 
-    # Optional: Add base files if there are any common files across all submissions
-    # Base files are typically those provided as part of the assignment instructions
-    # m.addBaseFile("/path/to/basefile1.c")
-    # m.addBaseFile("/path/to/basefile2.c")
-
-    # Add all student submission files from the specified directory
-    print("here3")
     for root, dirs, files in os.walk(submission_directory):
         for file in files:
             print(file)
@@ -478,38 +444,17 @@ def submit_to_moss(submission_directory, assignmentId):
                 print("inside:")
                 print(full_path)
                 m.addFile(full_path)
-
-    print("here4")
-
-    # Send the files to Moss
     try:
         url = m.send(lambda file_path, display_name: print('*', end='', flush=True))
     except Exception as e:
         print(f"Error sending files to Moss: {e}")
     print("\nReport Url: " + url)
 
-    # print("here5")
-    # print(url)
-
-    # # Save the Moss report's webpage
-    # report_file_path = os.path.join(submission_directory, "moss_report.html")
-    # m.saveWebPage(url, report_file_path)
-    # print(f"Report saved to: {report_file_path}")
-
-    # print("here56")
-
-    # # Download the full report locally including code comparison links
-    # report_directory = os.path.join(submission_directory, "moss_report")
-    # mosspy.download_report(url, report_directory, connections=8, log_level=10, on_read=lambda url: print('*', end='', flush=True))
-    # print(f"\nFull report downloaded to: {report_directory}")
-    # print("here57")
-
     assignmnet = Assignment.query.filter(Assignment.id == assignmentId).first()
     assignmnet.mossUrl = url
     db.session.commit()
 
     return url
-
 
 def auto_grade(submission_path, assignment_id, submissionId):
     print("Retrieving submission record...")
@@ -519,30 +464,42 @@ def auto_grade(submission_path, assignment_id, submissionId):
 
     # Retrieve test cases for the assignment
     test_cases = TestCase.query.filter_by(assignmentId=assignment_id).all()
-    total_cases = len(test_cases)
-    passed_cases = 0
     
     for test_case in test_cases:
         print(f"Processing TestCase ID: {test_case.id}")
-        
-        # Assume test_case_files contains input text and expected patterns for this test case
+
+        # Retrieve files for this test case
         test_case_files = TestCaseFile.query.filter_by(testCaseId=test_case.id).all()
-        input_text = ""  # You would populate this based on the contents of test_case_files
-        expected_patterns = []  # Populate with expected output patterns and associated penalties
+        
+        for file in test_case_files:
+            if file.fileName.endswith('.py'):
+                # Assuming the file paths are stored as absolute paths or relative to a base directory
+                
+                assignment_folder = os.path.join(app.config['TESTCASE_FOLDER'], f'testcase-{file.testCaseId}')
+                py_file_path = assignment_folder + "/" + file.fileName  # Modify this as needed
+                print(py_file_path)
+                try:
+                    # Execute the .py file
+                    result = subprocess.run(["python", py_file_path], capture_output=True, text=True)
+                    print(f"Output for TestCase ID: {test_case.id} (.py):\n{result.stdout}")
+                except Exception as e:
+                    print(f"Error executing .py file for TestCase ID: {test_case.id}: {e}")
 
-        # Compile and run the C program with the test case input
-        output = compile_and_run_c_program(submission_path, input_text)
-        if output is None:
-            print("Failed to run the C program for TestCase ID:", test_case.id)
-            continue
+            elif file.fileName.endswith('.txt'):
+                # Process .txt files as needed, e.g., as input for the C program or for validation
+                txt_file_path = file.fileName  # Modify this as needed
+                with open(txt_file_path, 'r') as txt_file:
+                    input_text = txt_file.read()
+                    # Here you could use input_text as input for running the C program
+                    # Or compare it to expected output, etc.
+                
+                print(f"Processed .txt file for TestCase ID: {test_case.id}")
 
-        print("Output for TestCase ID:", test_case.id, ":\n", output)
-        for pattern, error_message, penalty in expected_patterns:
-            passed_cases += check(output, pattern, error_message, penalty)
+    # This is a simplified example. Adapt the logic for compiling, running, 
+    # and checking output based on your specific requirements.
 
-    # Calculate and return the score
-    score = (passed_cases / total_cases) * 100
-    return {"status": "Graded", "score": score}
+    # Remember to calculate and return the score based on the actual checks and validations you perform.
+    return {"status": "Graded", "score": "Example Score"}
 
 def assign_to_course(course_id, assignment_id, userId):
     courseAssignment = CourseAssignment(courseId = course_id, assignmentId=assignment_id)
@@ -703,6 +660,8 @@ def remove_testcase(testcase_id, assignment_id=None):
             testcase = TestCase.query.filter_by(id=testcase_id).first()
         
         if testcase:
+            # find all TestCaseFiles
+            testCaseFiles = TestCaseFile.query.filter_by(testCaseId=testcase_id).delete()
             db.session.delete(testcase)
             db.session.commit()
             return True
