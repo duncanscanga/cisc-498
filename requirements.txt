@@ -7,3 +7,4 @@ datetime
 selenium
 seleniumbase
 pymysql
+mosspy
