@@ -20,8 +20,8 @@
       <li>
         Test Case: {{ submissionResult.testCaseId }}
         <br>
-        {{ submissionResult.fileName }} - Submitted on: {{ submissionResult.gradeDate }}
-        <br>
+        <!-- {{ submissionResult.fileName }} - Submitted on: {{ submissionResult.gradeDate }}
+        <br> -->
         Score: {{ submissionResult.score }} / {{ submissionResult.maxScore }}
         <br>
          {{ submissionResult.notes | replace("\n", "<br>") | safe }}

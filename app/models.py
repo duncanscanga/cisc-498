@@ -9,7 +9,7 @@ import subprocess
 import os
 import re
 import mosspy
-import nonsense
+from nostril import nonsense
 
 
 '''
@@ -554,6 +554,56 @@ def checkCode(c_file_path):
     for structure in structures_checked:
         if int(no_space.count(structure) >= 1):
             notes = notes + 'Structure: ' + structure + ' was found\n'
+
+
+
+    notes = notes +'\nVariables:\n'
+    x = 0
+    word = ''
+    while x < len(answer):
+        if answer[x].isspace():
+            variables = ['int', 'float', 'char', 'double', 'long']
+            for vari in variables:
+                if word == vari:
+                    while answer[x].isspace():
+                        x+=1
+                    word = ''
+                    while (not answer[x].isspace()) & (not answer[x] == ';'):
+                        if answer[x] == ',':
+                            s = vari + ' ' + word + ' found'
+                            if(len(word) > 6):
+                                if nonsense(word):
+                                    notes = notes +"\033[1;31m********************************************************************************\033[0m\n"
+                                    notes = notes +s + " - \033[1;31mNONSENSE. CHECK CODE.\033[0m\n"
+                                    notes = notes +"\033[1;31m********************************************************************************\033[0m\n"
+                                else:
+                                    notes = notes +s + " - \033[1;32mREAL WORD\033[0m\n"
+                            else:
+                                notes = notes +s + " - \033[1;34mCHECK CODE IF THIS IS NONSENSE, TOO SHORT FOR AUTODETECTOR\033[0m\n"
+                            x+=1
+                            while answer[x].isspace():
+                                x+=1
+                            word = ''
+                        word += answer[x]
+                        x+=1
+                    if word == 'main()':
+                        continue
+                    s = vari + ' ' + word + ' found'
+                    if(len(word) > 6):
+                        if nonsense(word):
+                            notes = notes +"\033[1;31m********************************************************************************\033[0m\n"
+                            notes = notes +s + " - \033[1;31mNONSENSE. CHECK CODE.\033[0m\n"
+                            notes = notes +"\033[1;31m********************************************************************************\033[0m\n"
+                        else:
+                            notes = notes +s + " - \033[1;32mREAL WORD\033[0m\n"
+                    else:
+                        notes = notes +s + " - \033[1;34mCHECK CODE IF THIS IS NONSENSE, TOO SHORT FOR AUTODETECTOR\033[0m\n"
+            word = ''
+        else:
+            word += answer[x]
+        x += 1
+
+
 
     return notes
 
