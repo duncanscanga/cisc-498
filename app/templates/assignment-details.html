@@ -19,6 +19,9 @@
     <div class="detail-item">
         <strong>End Date:</strong> {{ assignment.endDate}}
     </div>
+    <div class="detail-item">
+        <strong>Grades Published?</strong> {{ assignment.isPublic}}
+    </div>
 
     {% if isOwner %}
     <!-- Plagiarism Check Button for Owners -->
@@ -73,8 +76,11 @@
             <li>
                 {{ submission.fileName }} - Submitted on: {{ submission.submissionDate }}
                 <a
-                    href="{{ url_for('download_submission', assignment_id=assignment.id, submission_id=submission.id) }}">Download</a>
+                    href="{{ url_for('view_grade', assignment_id=assignment.id, submission_id=submission.id) }}">View Grade</a>
+                <a
+                    href="{{ url_for('download_submission', assignment_id=assignment.id, submission_id=submission.id) }}">Download File</a>
             </li>
+            
             {% endfor %}
         </ul>
     </div>

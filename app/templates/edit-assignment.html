@@ -16,7 +16,11 @@
       <label for="endDate">End Date</label>
       <input class="form-control" type="date" name="endDate" id="endDate" value="{{ assignment.endDate}}"  />
 
-      <!-- Add more fields as necessary -->
+
+      <div class="form-group">
+        <label for="isPublic">Publish Grades:</label>
+        <input type="checkbox" name="isPublic" id="isPublic" {{ 'checked' if assignment.isPublic else '' }}>
+      </div>
 
       <div class="btn-wrapper">
         <input class="btn" type="submit" value="Update Assignment" />
