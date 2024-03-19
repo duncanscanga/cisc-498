@@ -19,6 +19,9 @@
     <div class="detail-item">
         <strong>End Date:</strong> {{ assignment.endDate}}
     </div>
+    <div class="detail-item">
+        <strong>Grades Published?</strong> {{ assignment.isPublic}}
+    </div>
 
     {% if isOwner %}
     <!-- Plagiarism Check Button for Owners -->

@@ -30,6 +30,7 @@ class Assignment(db.Model):
     endDate = db.Column(db.DateTime, nullable=True)
     createdBy = db.Column(db.Integer, nullable=True)
     mossUrl = db.Column(db.String(800), nullable=True)
+    isPublic = db.Column(db.Boolean, nullable=True)
 
     def __repr__(self):
         return "<Assignment %r>" % self.id
@@ -375,9 +376,24 @@ def getSubmissions(course_id, user_id):
         submisison.assignmentName = Assignment.query.filter(Assignment.id == submisison.assignmentId).first().name
     return submissions
 
-def getSubmissionResults(submissionId):
+def getSubmissionResults(submissionId, submission):
     submissionResults = SubmissionResult.query.filter(SubmissionResult.submissionId == submissionId).all()
-    return submissionResults
+    if len(submissionResults) > 0:
+        print("1")
+        assignmnet = Assignment.query.filter(Assignment.id == submission.assignmentId).first()
+        print("2")
+        if assignmnet.isPublic:
+            print("3")
+            return submissionResults
+        else:
+            # remove all results where the test cases were hidden
+            updatedSubmissionResults = []
+            for submissionResult in submissionResults:
+                testCase = TestCase.query.filter(TestCase.id == submissionResult.testCaseId).first()
+                if testCase.visible:
+                    updatedSubmissionResults.append(submissionResult)
+            return updatedSubmissionResults
+    return []
 
 def get_test_Cases(isOwner, assignmentId):
     testCases = []
@@ -743,7 +759,7 @@ def remove_testcase(testcase_id, assignment_id=None):
         print(f"Error removing test case: {e}")
         return False
 
-def update_assignment_details(assignment_id, name, start_date, end_date):
+def update_assignment_details(assignment_id, name, start_date, end_date, is_public):
     assignment = Assignment.query.filter(Assignment.id == assignment_id).all()
     if len(assignment) < 1:
         return False
@@ -751,6 +767,8 @@ def update_assignment_details(assignment_id, name, start_date, end_date):
     assignment.name = name
     assignment.start_date = start_date
     assignment.end_date = end_date
+    print(is_public)
+    assignment.isPublic = is_public
     db.session.commit()
     return True
 

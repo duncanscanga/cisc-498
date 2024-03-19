@@ -71,7 +71,7 @@ def view_grade(user, assignment_id, submission_id):
     # Fetch the submission based on submission_id, user_id, and assignment_id
     submission = Submission.query.filter_by(id=submission_id, assignmentId=assignment_id).first()
 
-    submissionResults = getSubmissionResults(submission_id)
+    submissionResults = getSubmissionResults(submission_id, submission)
     
     student = findUserById(submission.userId)
 
@@ -188,10 +188,13 @@ def update_assignment(user, assignment_id):
     name = request.form.get('name')
     start_date = request.form.get('startDate')
     end_date = request.form.get('endDate')
+    is_public = request.form.get('isPublic') == 'on'
+    print("here")
+
 
     # Assuming these functions exist and properly update the database
-    success = update_assignment_details(assignment_id, name, start_date, end_date)
-    
+    success = update_assignment_details(assignment_id, name, start_date, end_date, is_public)
+    print("not here")
     if success:
         flash('Assignment successfully updated.')
         return redirect(f'/assignments/{assignment_id}')
