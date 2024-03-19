@@ -92,6 +92,7 @@ class SubmissionResult(db.Model):
     fileName = db.Column(db.String(500), nullable=False)
     score = db.Column(db.Integer, nullable=False)
     notes = db.Column(db.Text, nullable=True)
+    maxScore = db.Column(db.Integer, nullable=True)
 
 
     def __repr__(self):
@@ -119,6 +120,7 @@ class TestCase(db.Model):
     submissionDate = db.Column(db.DateTime, nullable=False)
     fileName = db.Column(db.String(550), nullable=True)
     name = db.Column(db.String(550), nullable=True)
+    maxScore = db.Column(db.Integer, nullable=True)
 
     def __repr__(self):
         return "<TestCase %r>" % self.id
@@ -400,8 +402,8 @@ def get_test_Cases(isOwner, assignmentId):
         testCases = TestCase.query.filter(and_(TestCase.assignmentId == assignmentId, TestCase.visible == 1)).all()
     return testCases
 
-def addTestCaseLog(filename_with_user_id, user, assignment_id, visible):
-    test_case = TestCase(visible=visible, assignmentId=assignment_id, userId=user.id, submissionDate=func.now())
+def addTestCaseLog(filename_with_user_id, user, assignment_id, visible, maxScore):
+    test_case = TestCase(visible=visible, assignmentId=assignment_id, userId=user.id, submissionDate=func.now(), maxScore=maxScore)
     db.session.add(test_case)
     db.session.flush()  # To get test_case.id for the new entry
     # testCase = TestCase(assignmentId = assignment_id, visible=visible, userId=user.id, fileName=filename_with_user_id, submissionDate=func.now())
@@ -422,7 +424,7 @@ def addTestCaseFileEntry(testcase_id, assignment_id, filename):
 
     return True
 
-def create_testcase(assignment_id, userId, visible=True):
+def create_testcase(assignment_id, userId, visible, maxScore):
     # Query the number of existing TestCase objects for this assignmentId
     existing_test_cases_count = TestCase.query.filter_by(assignmentId=assignment_id).count()
     
@@ -436,6 +438,7 @@ def create_testcase(assignment_id, userId, visible=True):
         assignmentId=assignment_id,
         userId=userId,
         submissionDate=func.now(),
+        maxScore=maxScore,
         # Assuming you add a 'name' field to TestCase for storing "Test Case _"
         name=new_test_case_name  
     )
@@ -505,39 +508,68 @@ def auto_grade(c_file_name, input_txt_name):
     return 0
 
 def grade_submission(file_path, assignment_id, submission ):
-
-    # submission = Submission.query.filter(Submission.id == submission.id).all()
-    # #assignment = Assignment.query.filter(Assignment.id == assignment_id).first()
-    # testCases = TestCase.query.filter(TestCase.assignmentId == assignment_id).all()
-    # for testCase in testCases:
-    #     testCaseFiles = TestCaseFile.query.filter(TestCaseFile.testCaseId == testCase.id).all()
-    #     pythonFile = None
-    #     txtFile = None
-    #     for testCaseFile in testCaseFiles:
-    #         if testCaseFile.fileName.endswith(".py"):
-    #             pythonFile = testCaseFile.fileName
-    #         if testCaseFile.fileName.endswith(".txt"):
-    #             txtFile = testCaseFile.fileName
-    #     testcase_folder = app.config['TESTCASE_FOLDER']
-        
-    #     # Ensure base testcase folder exists
-    #     os.makedirs(testcase_folder, exist_ok=True)
-        
-    #     assignment_testcase_folder = os.path.join(testcase_folder, f'assignment-{assignment_id}', f'testcase-{testCase.id}')
-        
-    #     # Update file_path to include the specific test case folder
-    #     txt_file_path = os.path.join(assignment_testcase_folder, txtFile)
-    
     #first test case:
+    print("1")
     result = grade_submission2(file_path)
-    print("Finding")
+    logGradingResult(result, "", 1, submission)
+
+    #second test case:
+    result = testCleanCompile(file_path)
+    logGradingResult(result, "", 2, submission)
+
+    #third test case:
+    notes = checkCode(file_path)
+    logGradingResult(result, notes, 3, submission)
+
+
+    return result
+
+def checkCode(c_file_path):
+    with open(c_file_path) as response:
+            answer = response.read()
+
+    notes = "\n"
+
+    notes = notes + 'Analysis of code:'
+
+
+    # check for usage of comments in student code
+    notes = notes +'\nComments:\n'
+    single_count = int(answer.count('//'))
+    multiple_count = int(answer.count('/*'))
+    sums = single_count + multiple_count
+    if sums >= 1:
+        notes = notes +str(sums) + ' comments used in the program.\n'
+    else:
+        notes = notes +'No comments used in the program.\n'
+
+
+
+   
+
+    #check for structures
+    notes = notes +'\nStructures:\n'
+    no_space = ''.join(answer.split())
+    structures_checked = ['for(', 'while(', 'if(', 'elseif(', 'else(', 'switch(']
+    for structure in structures_checked:
+        if int(no_space.count(structure) >= 1):
+            notes = notes + 'Structure: ' + structure + ' was found\n'
+
+    return notes
+
+def logGradingResult(result, notes, testCaseId, submission):
     submission = Submission.query.filter(Submission.id == int(submission.id)).all()[0]
-    print("found")
-    gradedSubmission = SubmissionResult(assignmentId=submission.assignmentId, testCaseId=1, submissionId= submission.id, userId=submission.userId, gradeDate=func.now(), fileName=submission.fileName, score=result )
+    testCase = TestCase.query.filter(TestCase.id == testCaseId).all()[0]
+    gradedSubmission = SubmissionResult(assignmentId=submission.assignmentId, testCaseId=testCaseId, notes=notes, submissionId= submission.id, userId=submission.userId, gradeDate=func.now(), fileName=submission.fileName, score=result, maxScore = testCase.maxScore )
     db.session.add(gradedSubmission)
     db.session.commit()
 
-    return result
+def testCleanCompile(c_file_path):
+    compile_process = subprocess.run(["gcc", c_file_path, "-o", "student_program"], capture_output=True, text=True)
+    if compile_process.returncode != 0:
+        # Handle compilation error properly, perhaps return a score of 0 or a specific error code
+        return 0
+    return 100
 
 
 def grade_submission2(c_file_path):

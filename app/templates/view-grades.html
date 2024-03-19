@@ -22,9 +22,9 @@
         <br>
         {{ submissionResult.fileName }} - Submitted on: {{ submissionResult.gradeDate }}
         <br>
-        Score: {{ submissionResult.score }}
+        Score: {{ submissionResult.score }} / {{ submissionResult.maxScore }}
         <br>
-        Notes: {{ submissionResult.notes }}
+         {{ submissionResult.notes | replace("\n", "<br>") | safe }}
         <br>
       </li>
 

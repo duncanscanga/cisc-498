@@ -448,13 +448,10 @@ def post_create_assignment(user):
         # Handle incorrect date format or other conversion errors
         return render_template('create-assignment.html', user=user, msg="Invalid date format.")
 
-    # Call your function to create a new course instance in the database
-    # Assuming such a function exists and is named 'create_course'
     success = create_assignment(name,start_date, end_date, user.id)
 
     # Redirect based on the operation success
     if success:
-        # Assuming you want to redirect to a page showing all courses or a confirmation page
         return redirect('/assignments')
     else:
         # Stay on the create course page and show an error message
@@ -467,7 +464,7 @@ def post_create_testcase(user, assignment_id):
     if user.role != 3:
         return redirect('/')
     
-    success = create_testcase(assignment_id, user.id)
+    success = create_testcase(assignment_id, user.id, True, 100)
 
     # Redirect based on the operation success
     if success:
@@ -524,9 +521,11 @@ def submit_assignment(user, assignment_id):
         # Redirect or respond as necessary after file upload
         flash('File successfully uploaded')
         # Log the submission with the unique filename and path
+        print("here")
         submission = addSubmissionLog(unique_filename, user, assignment_id)
+        print("here2")
         # After saving the file, call the auto-grading function
-        grading_result = grade_submission(file_path, assignment_id, submission )
+        grade_submission(file_path, assignment_id, submission )
         
         return redirect(f'/assignments/{assignment_id}')
     
@@ -630,7 +629,7 @@ def upload_testcase(user, assignment_id):
         visible = 'visible' in request.form and request.form['visible'] == 'true'
         
         # Create or update TestCase and TestCaseFile entries
-        addTestCaseLog(filename, user, assignment_id, visible)
+        addTestCaseLog(filename, user, assignment_id, visible, 100)
 
         flash('Test case file successfully uploaded')
         return redirect(f'/assignments/{assignment_id}')
