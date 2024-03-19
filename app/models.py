@@ -77,6 +77,24 @@ class Submission(db.Model):
 
     def __repr__(self):
         return "<Submission %r>" % self.id
+    
+class SubmissionResult(db.Model):
+    """A class to represent the SubmissionResult Entity."""
+
+    # Stores the id
+    id = db.Column(db.Integer, primary_key=True)
+    assignmentId = db.Column(db.Integer, nullable=False)
+    testCaseId = db.Column(db.Integer, nullable=False)
+    submissionId = db.Column(db.Integer, nullable=False)
+    userId = db.Column(db.Integer, nullable=False)
+    gradeDate = db.Column(db.DateTime, nullable=False)
+    fileName = db.Column(db.String(500), nullable=False)
+    score = db.Column(db.Integer, nullable=False)
+    notes = db.Column(db.Text, nullable=True)
+
+
+    def __repr__(self):
+        return "<SubmissionResult %r>" % self.id
 
 class CourseAssignment(db.Model):
     """A class to represent the CourseAssignment Entity."""
@@ -345,7 +363,7 @@ def addSubmissionLog(filename_with_user_id, user, assignment_id):
     db.session.add(submission)
     db.session.commit()
     db.session.flush() 
-    return submission.id
+    return submission
 
 def getSubmissions(course_id, user_id):
     submissions = Submission.query.filter(Submission.userId == user_id)\
@@ -356,6 +374,10 @@ def getSubmissions(course_id, user_id):
     for submisison in submissions:
         submisison.assignmentName = Assignment.query.filter(Assignment.id == submisison.assignmentId).first().name
     return submissions
+
+def getSubmissionResults(submissionId):
+    submissionResults = SubmissionResult.query.filter(SubmissionResult.submissionId == submissionId).all()
+    return submissionResults
 
 def get_test_Cases(isOwner, assignmentId):
     testCases = []
@@ -412,23 +434,6 @@ def create_testcase(assignment_id, userId, visible=True):
     return new_test_case
 
 
-def compile_and_run_c_program(submission_path, input_text):
-    compile_status = subprocess.run(["gcc", submission_path, "-o", "program_output"], capture_output=True)
-    if compile_status.returncode != 0:
-        print("Compilation Error:", compile_status.stderr.decode())
-        return None
-    
-    run_status = subprocess.run(["./program_output"], input=input_text, text=True, capture_output=True)
-    return run_status.stdout
-
-def check(output, pattern, error_message, penalty):
-    if not re.search(pattern, output, flags=re.MULTILINE):
-        print(error_message)
-        return penalty
-    return 0
-
-
-
 def submit_to_moss(submission_directory, assignmentId):
     print("here")
     userid = 732044316  # Your Moss user ID
@@ -455,51 +460,118 @@ def submit_to_moss(submission_directory, assignmentId):
     db.session.commit()
 
     return url
+def compile_and_run_c_program(c_file_name, input_txt_name):
+    # Assuming current directory contains the files
+    current_dir = ""
+    c_file_path = os.path.join(current_dir, c_file_name)
+    input_txt_path = os.path.join(current_dir, input_txt_name)
 
-def auto_grade(submission_path, assignment_id, submissionId):
-    print("Retrieving submission record...")
-    submission = Submission.query.filter_by(id=submissionId, assignmentId=assignment_id).first()
-    if not submission:
-        return make_response('Submission not found', 404)
+    # Compile the C program to an executable named 'student_output'
+    compile_command = ["gcc", c_file_path, "-o", "student_output"]
+    compile_result = subprocess.run(compile_command, capture_output=True)
+    if compile_result.returncode != 0:
+        # Handle compilation error properly
+        return None
 
-    # Retrieve test cases for the assignment
-    test_cases = TestCase.query.filter_by(assignmentId=assignment_id).all()
+    # Run the compiled program with input from the txt file
+    with open(input_txt_path, 'r') as input_file:
+        run_command = ["./student_output"]
+        run_result = subprocess.run(run_command, stdin=input_file, text=True, capture_output=True)
+        if run_result.returncode == 0:
+            return run_result.stdout
+        else:
+            # Handle runtime error properly
+            return None
+
+def auto_grade(c_file_name, input_txt_name):
+    print("Grading submission...")
     
-    for test_case in test_cases:
-        print(f"Processing TestCase ID: {test_case.id}")
+    # Run the grading logic
+    output = compile_and_run_c_program(c_file_name, input_txt_name)
+    
+    if output is not None:
+        print("Output of the student's program:")
+        print(output)
+    else:
+        print("Failed to compile or execute the student's program.")
+    
+    return 0
 
-        # Retrieve files for this test case
-        test_case_files = TestCaseFile.query.filter_by(testCaseId=test_case.id).all()
+def grade_submission(file_path, assignment_id, submission ):
+    # print("inside")
+    # #print(assignment_id)
+    # submission = Submission.query.filter(Submission.id == submission.id).all()
+    # print("insid3")
+    # #assignment = Assignment.query.filter(Assignment.id == assignment_id).first()
+    # print("inside2")
+    # testCases = TestCase.query.filter(TestCase.assignmentId == assignment_id).all()
+    # print("found all data")
+    # for testCase in testCases:
+    #     print("testCase: ", str(testCase.id))
+    #     testCaseFiles = TestCaseFile.query.filter(TestCaseFile.testCaseId == testCase.id).all()
+    #     pythonFile = None
+    #     txtFile = None
+    #     for testCaseFile in testCaseFiles:
+    #         if testCaseFile.fileName.endswith(".py"):
+    #             pythonFile = testCaseFile.fileName
+    #         if testCaseFile.fileName.endswith(".txt"):
+    #             txtFile = testCaseFile.fileName
+    #     testcase_folder = app.config['TESTCASE_FOLDER']
         
-        for file in test_case_files:
-            if file.fileName.endswith('.py'):
-                # Assuming the file paths are stored as absolute paths or relative to a base directory
-                
-                assignment_folder = os.path.join(app.config['TESTCASE_FOLDER'], f'testcase-{file.testCaseId}')
-                py_file_path = assignment_folder + "/" + file.fileName  # Modify this as needed
-                print(py_file_path)
-                try:
-                    # Execute the .py file
-                    result = subprocess.run(["python", py_file_path], capture_output=True, text=True)
-                    print(f"Output for TestCase ID: {test_case.id} (.py):\n{result.stdout}")
-                except Exception as e:
-                    print(f"Error executing .py file for TestCase ID: {test_case.id}: {e}")
+    #     # Ensure base testcase folder exists
+    #     os.makedirs(testcase_folder, exist_ok=True)
+        
+    #     assignment_testcase_folder = os.path.join(testcase_folder, f'assignment-{assignment_id}', f'testcase-{testCase.id}')
+        
+    #     # Update file_path to include the specific test case folder
+    #     txt_file_path = os.path.join(assignment_testcase_folder, txtFile)
+        # print("found the test case files")
+        # print("c file path: ", str(file_path))
+        # print("txt file path: ", str(txt_file_path))
+    
+    #first test case:
+    result = grade_submission2(file_path)
+    print("Finding")
+    submission = Submission.query.filter(Submission.id == int(submission.id)).all()[0]
+    print("found")
+    gradedSubmission = SubmissionResult(assignmentId=submission.assignmentId, testCaseId=1, submissionId= submission.id, userId=submission.userId, gradeDate=func.now(), fileName=submission.fileName, score=result )
+    db.session.add(gradedSubmission)
+    db.session.commit()
 
-            elif file.fileName.endswith('.txt'):
-                # Process .txt files as needed, e.g., as input for the C program or for validation
-                txt_file_path = file.fileName  # Modify this as needed
-                with open(txt_file_path, 'r') as txt_file:
-                    input_text = txt_file.read()
-                    # Here you could use input_text as input for running the C program
-                    # Or compare it to expected output, etc.
-                
-                print(f"Processed .txt file for TestCase ID: {test_case.id}")
+        # #auto_grade(file_path,txt_file_path )
+        # print("done autograding")
+    return result
 
-    # This is a simplified example. Adapt the logic for compiling, running, 
-    # and checking output based on your specific requirements.
 
-    # Remember to calculate and return the score based on the actual checks and validations you perform.
-    return {"status": "Graded", "score": "Example Score"}
+def grade_submission2(c_file_path):
+    compile_process = subprocess.run(["gcc", c_file_path, "-o", "student_program"], capture_output=True, text=True)
+    if compile_process.returncode != 0:
+        # Handle compilation error properly, perhaps return a score of 0 or a specific error code
+        return 0
+
+    inputs = "5000.67 10000.89 25000.01\n2000.82 3000.01 500.33\n10"
+    expected_output_patterns = [
+        r"The cost of truck 1 after \d+ years is \$\d+\.?\d*",
+        # Add more patterns as needed
+    ]
+
+    run_process = subprocess.run(["./student_program"], input=inputs, capture_output=True, text=True)
+    if run_process.returncode != 0:
+        # Handle runtime error properly, perhaps return a score of 0 or a specific error code
+        return 0
+
+    actual_output = run_process.stdout
+
+    score = 100
+    penalty_per_error = 10
+
+    for pattern in expected_output_patterns:
+        if not re.search(pattern, actual_output, re.MULTILINE):
+            score -= penalty_per_error
+
+    # Return the final score as an integer
+    return score
+        
 
 def assign_to_course(course_id, assignment_id, userId):
     courseAssignment = CourseAssignment(courseId = course_id, assignmentId=assignment_id)

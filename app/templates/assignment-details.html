@@ -73,8 +73,11 @@
             <li>
                 {{ submission.fileName }} - Submitted on: {{ submission.submissionDate }}
                 <a
-                    href="{{ url_for('download_submission', assignment_id=assignment.id, submission_id=submission.id) }}">Download</a>
+                    href="{{ url_for('view_grade', assignment_id=assignment.id, submission_id=submission.id) }}">View Grade</a>
+                <a
+                    href="{{ url_for('download_submission', assignment_id=assignment.id, submission_id=submission.id) }}">Download File</a>
             </li>
+            
             {% endfor %}
         </ul>
     </div>

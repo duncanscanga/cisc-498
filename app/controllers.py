@@ -1,5 +1,5 @@
 from flask import send_file, render_template, render_template_string,request, session, redirect,  url_for, flash, send_from_directory, abort, make_response
-from app.models import addSubmissionLog, addTestCaseFileEntry, addTestCaseLog, TestCase, assign_to_course, TestCaseFile, Course, auto_grade, create_assignment, create_course, create_testcase, enrollInCourse, enrollTaInCourse, find_assignments, find_courses, find_user_assignments, findUserById, get_test_Cases, get_user_submissions_for_assignment, getAssignmentsById, getAssignmentsForCourse, getCourseById, getSubmissions, getUsersForCourse, login, Submission, User, register, remove_testcase, submit_to_moss, togglevisiblity, update_assignment_details, update_user
+from app.models import addSubmissionLog, addTestCaseFileEntry, addTestCaseLog, TestCase, assign_to_course, TestCaseFile, Course, auto_grade, create_assignment, create_course, create_testcase, enrollInCourse, enrollTaInCourse, find_assignments, find_courses, find_user_assignments, findUserById, get_test_Cases, get_user_submissions_for_assignment, getAssignmentsById, getAssignmentsForCourse, getCourseById, getSubmissionResults, getSubmissions, getUsersForCourse, grade_submission, login, Submission, User, register, remove_testcase, submit_to_moss, togglevisiblity, update_assignment_details, update_user
 from app import app
 from datetime import datetime
 from werkzeug.utils import secure_filename
@@ -55,23 +55,28 @@ def download_submission(user, assignment_id, submission_id):
             return make_response('File not found', 404)
     return 'Submission not found', 404
 
-@app.route('/view-grade/<int:submission_id>')
+
+@app.route('/view-grade/<int:assignment_id>/<int:submission_id>')
 @authenticate
-def view_grade(user, submission_id):
+def view_grade(user, assignment_id, submission_id):
     # Ensure that only authenticated users, TAs, and instructors can download submissions
     if user.role not in [2, 3]:
         #check if user is looking at its own work
-        submission = Submission.query.filter_by(id=submission_id).first()
+        submission = Submission.query.filter_by(id=submission_id, assignmentId=assignment_id).first()
         if submission.userId != user.id:
         # Forbidden access attempt
             return make_response('Access denied', 403)
-    
-    submission = Submission.query.filter_by(id=submission_id).first()
+        
 
+    # Fetch the submission based on submission_id, user_id, and assignment_id
+    submission = Submission.query.filter_by(id=submission_id, assignmentId=assignment_id).first()
+
+    submissionResults = getSubmissionResults(submission_id)
+    
     student = findUserById(submission.userId)
 
     return render_template('view-grades.html',
-                           message='', user=user, student=student )
+                           message='', user=user, student=student, submissionResults=submissionResults )
 
 
 
@@ -521,15 +526,8 @@ def submit_assignment(user, assignment_id):
         submission = addSubmissionLog(unique_filename, user, assignment_id)
         # After saving the file, call the auto-grading function
         print("here")
-        grading_result = auto_grade(file_path, assignment_id, submission )
-        print("here2")
-        
-        # You can now use grading_result to update the submission record, notify the user, etc.
-        # For example:
-        if grading_result['status'] == 'Graded':
-            flash(f"Assignment graded. Score: {grading_result['score']}")
-        else:
-            flash(f"Grading failed: {grading_result['detail']}", 'error')
+        grading_result = grade_submission(file_path, assignment_id, submission )
+        print(grading_result)
         
         return redirect(f'/assignments/{assignment_id}')
     

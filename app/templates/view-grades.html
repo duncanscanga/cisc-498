@@ -1,14 +1,36 @@
 {% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}AutoGrader Result{% endblock %}</h1>
+{% endblock %}
+
+
 {% block content %}
 <link rel="stylesheet" href="../static/styles/user_details.css" />
 
 <div class="container">
   <h1>AutoGrader Result: {{ student.username }} ({{ student.student_number }})</h1>
-  
-  <div class="submissions">
-    <h3>Score: 10 /10</h3>
-    <h3>Moss Result: 10 /10</h3>
-    <h3>Late Mark Deduction: 0</h3>
+
+
+  <div id="submissions">
+    <h2>Test Case Results:</h2>
+
+    <ul>
+      {% for submissionResult in submissionResults %}
+      <li>
+        Test Case: {{ submissionResult.testCaseId }}
+        <br>
+        {{ submissionResult.fileName }} - Submitted on: {{ submissionResult.gradeDate }}
+        <br>
+        Score: {{ submissionResult.score }}
+        <br>
+        Notes: {{ submissionResult.notes }}
+        <br>
+      </li>
+
+      {% endfor %}
+    </ul>
+
   </div>
 </div>
 {% endblock %}
