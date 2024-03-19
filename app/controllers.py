@@ -189,12 +189,10 @@ def update_assignment(user, assignment_id):
     start_date = request.form.get('startDate')
     end_date = request.form.get('endDate')
     is_public = request.form.get('isPublic') == 'on'
-    print("here")
 
 
     # Assuming these functions exist and properly update the database
     success = update_assignment_details(assignment_id, name, start_date, end_date, is_public)
-    print("not here")
     if success:
         flash('Assignment successfully updated.')
         return redirect(f'/assignments/{assignment_id}')
@@ -528,9 +526,7 @@ def submit_assignment(user, assignment_id):
         # Log the submission with the unique filename and path
         submission = addSubmissionLog(unique_filename, user, assignment_id)
         # After saving the file, call the auto-grading function
-        print("here")
         grading_result = grade_submission(file_path, assignment_id, submission )
-        print(grading_result)
         
         return redirect(f'/assignments/{assignment_id}')
     

@@ -379,11 +379,8 @@ def getSubmissions(course_id, user_id):
 def getSubmissionResults(submissionId, submission):
     submissionResults = SubmissionResult.query.filter(SubmissionResult.submissionId == submissionId).all()
     if len(submissionResults) > 0:
-        print("1")
         assignmnet = Assignment.query.filter(Assignment.id == submission.assignmentId).first()
-        print("2")
         if assignmnet.isPublic:
-            print("3")
             return submissionResults
         else:
             # remove all results where the test cases were hidden
@@ -451,19 +448,13 @@ def create_testcase(assignment_id, userId, visible=True):
 
 
 def submit_to_moss(submission_directory, assignmentId):
-    print("here")
     userid = 732044316  # Your Moss user ID
-
     m = mosspy.Moss(userid, "c")  # Specify "c" for C language
-    print("here2")
 
     for root, dirs, files in os.walk(submission_directory):
         for file in files:
-            print(file)
             if file.endswith(".c"):  # Ensure only C files are added
                 full_path = os.path.join(root, file)
-                print("inside:")
-                print(full_path)
                 m.addFile(full_path)
     try:
         url = m.send(lambda file_path, display_name: print('*', end='', flush=True))
@@ -514,16 +505,11 @@ def auto_grade(c_file_name, input_txt_name):
     return 0
 
 def grade_submission(file_path, assignment_id, submission ):
-    # print("inside")
-    # #print(assignment_id)
+
     # submission = Submission.query.filter(Submission.id == submission.id).all()
-    # print("insid3")
     # #assignment = Assignment.query.filter(Assignment.id == assignment_id).first()
-    # print("inside2")
     # testCases = TestCase.query.filter(TestCase.assignmentId == assignment_id).all()
-    # print("found all data")
     # for testCase in testCases:
-    #     print("testCase: ", str(testCase.id))
     #     testCaseFiles = TestCaseFile.query.filter(TestCaseFile.testCaseId == testCase.id).all()
     #     pythonFile = None
     #     txtFile = None
@@ -541,9 +527,6 @@ def grade_submission(file_path, assignment_id, submission ):
         
     #     # Update file_path to include the specific test case folder
     #     txt_file_path = os.path.join(assignment_testcase_folder, txtFile)
-        # print("found the test case files")
-        # print("c file path: ", str(file_path))
-        # print("txt file path: ", str(txt_file_path))
     
     #first test case:
     result = grade_submission2(file_path)
@@ -554,8 +537,6 @@ def grade_submission(file_path, assignment_id, submission ):
     db.session.add(gradedSubmission)
     db.session.commit()
 
-        # #auto_grade(file_path,txt_file_path )
-        # print("done autograding")
     return result
 
 
@@ -597,7 +578,6 @@ def assign_to_course(course_id, assignment_id, userId):
 
 def find_user_assignments(userId):
     assignments = Assignment.query.filter(Assignment.createdBy == userId).all()
-    print(assignments)
     return assignments
 
 def create_assignment(name, start_date, end_date, userId):
@@ -767,7 +747,6 @@ def update_assignment_details(assignment_id, name, start_date, end_date, is_publ
     assignment.name = name
     assignment.start_date = start_date
     assignment.end_date = end_date
-    print(is_public)
     assignment.isPublic = is_public
     db.session.commit()
     return True
