@@ -14,19 +14,23 @@
         <strong>Name:</strong> {{ assignment.name }}
     </div>
     <div class="detail-item">
-        <strong>Start Date:</strong> {{ assignment.startDate}}
+        <strong>Start Date:</strong> {{ assignment.startDate }}
     </div>
     <div class="detail-item">
-        <strong>End Date:</strong> {{ assignment.endDate}}
+        <strong>End Date:</strong> {{ assignment.endDate }}
+    </div>
+    <div class="detail-item">
+        <strong>Late Penalty</strong> {{ assignment.dailyLatePenalty}} % per day
     </div>
     <div class="detail-item">
         <strong>Grades Published?</strong> {{ assignment.isPublic}}
     </div>
     {% if isOwner %}
-<a href="{{ url_for('download_grades', assignment_id=assignment.id) }}" class="btn">Download Grades</a>
-{% endif %}
+    <a href="{{ url_for('download_grades', assignment_id=assignment.id) }}" class="btn">Download Grades</a>
+    {% endif %}
 
     {% if isOwner %}
+    <a href="/edit-assignment/{{ assignment.id }}" class="btn">Edit Assignment Details</a>
     <!-- Plagiarism Check Button for Owners -->
     <a href="{{ url_for('confirm_assignment', assignment_id=assignment.id) }}" class="btn">Check Submissions for
         Plagiarism</a>
@@ -69,7 +73,7 @@
     {% endif %}
     <!-- Conditional Button based on isOwner -->
     {% if isOwner %}
-    <a href="/edit-assignment/{{ assignment.id }}" class="btn">Edit Assignment Details</a>
+
     {% else %}
 
     <div id="submissions">
@@ -78,12 +82,13 @@
             {% for submission in submissions %}
             <li>
                 {{ submission.fileName }} - Submitted on: {{ submission.submissionDate }}
+                <a href="{{ url_for('view_grade', assignment_id=assignment.id, submission_id=submission.id) }}">View
+                    Grade</a>
                 <a
-                    href="{{ url_for('view_grade', assignment_id=assignment.id, submission_id=submission.id) }}">View Grade</a>
-                <a
-                    href="{{ url_for('download_submission', assignment_id=assignment.id, submission_id=submission.id) }}">Download File</a>
+                    href="{{ url_for('download_submission', assignment_id=assignment.id, submission_id=submission.id) }}">Download
+                    File</a>
             </li>
-            
+
             {% endfor %}
         </ul>
     </div>

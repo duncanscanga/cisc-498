@@ -36,6 +36,9 @@ def get_assignment_details(user, assignmentId):
     for test_case in testCases:
         test_case.files = TestCaseFile.query.filter_by(testCaseId=test_case.id).all()
 
+    # assignment.startDate = assignment.startDate.strftime('%Y-%m-%d')
+    # assignment.endDate = assignment.endDate.strftime('%Y-%m-%d')
+
     return render_template('assignment-details.html',  testCases=testCases, submissions=submissions, isOwner=isOwner, user=user, assignment=assignment)
 
 
@@ -64,10 +67,11 @@ def update_assignment(user, assignment_id):
     start_date = request.form.get('startDate')
     end_date = request.form.get('endDate')
     is_public = request.form.get('isPublic') == 'on'
+    daily_late_penalty = request.form.get('dailyLatePenalty')  # Get the daily late penalty rate from the form
 
 
     # Assuming these functions exist and properly update the database
-    success = update_assignment_details(assignment_id, name, start_date, end_date, is_public)
+    success = update_assignment_details(assignment_id, name, start_date, end_date, is_public, daily_late_penalty)
     if success:
         flash('Assignment successfully updated.')
         return redirect(f'/assignments/{assignment_id}')
@@ -367,8 +371,12 @@ def view_grade(user, assignment_id, submission_id):
     
     student = findUserById(submission.userId)
 
+    print("here")
+    latePenalty = getLatePenalty(submission)
+    print("here1")
+
     return render_template('view-grades.html',
-                           message='', user=user, student=student, submissionResults=submissionResults )
+                           message='', latePenalty=latePenalty, user=user, student=student, submissionResults=submissionResults )
 
 
 

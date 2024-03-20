@@ -5,6 +5,7 @@ from flask import render_template, request, session, redirect,  url_for, flash, 
 from sqlalchemy import null, text, desc, asc, and_, or_, nullslast, cast, Float, func
 from validate_email import validate_email
 from datetime import date
+from datetime import datetime
 from secrets import token_urlsafe
 import subprocess
 import os
@@ -383,7 +384,46 @@ def create_assignment(name, start_date, end_date, userId):
     db.session.add(assignment)
     db.session.commit()
     return True
+def getLatePenalty(submission):
+    """
+    Calculate the late penalty for a submission, considering cases where the assignment end date might be None.
 
+    Parameters:
+    - submission: a Submission object with attributes `submissionDate` and a related `assignment` object 
+                  with attributes `endDate` and `dailyLatePenalty`.
+
+    Returns: 
+    - The penalty as a percentage of the total score to be deducted.
+    """
+    assignment = Assignment.query.filter(Assignment.id == submission.assignmentId).first()
+    # Check if due date is set; if not, return 0 penalty
+    print("1")
+    if assignment.endDate is None:
+        return 0
+    print("2")
+    # Safely convert submissionDate and endDate to datetime if they are not already
+    submissionDate = submission.submissionDate if isinstance(submission.submissionDate, datetime) \
+        else datetime.strptime(submission.submissionDate, '%Y-%m-%d %H:%M:%S')
+    print("2.5")
+    print(assignment.endDate)
+    dueDate = assignment.endDate if isinstance(assignment.endDate, datetime) \
+        else datetime.strptime(assignment.endDate, '%Y-%m-%d %H:%M:%S')
+    dailyLatePenalty = assignment.dailyLatePenalty
+    print("3")
+    # Check if the submission was late
+    if submissionDate > dueDate:
+        # Calculate the number of full days late
+        delta = submissionDate - dueDate
+        days_late = delta.days
+
+        # Calculate the total penalty
+        total_penalty = days_late * dailyLatePenalty
+    else:
+        # No penalty if the submission was on time
+        total_penalty = 0
+    print("4")
+
+    return total_penalty
 
   
 def remove_testcase(testcase_id, assignment_id=None):
@@ -406,14 +446,23 @@ def remove_testcase(testcase_id, assignment_id=None):
         print(f"Error removing test case: {e}")
         return False
 
-def update_assignment_details(assignment_id, name, start_date, end_date, is_public):
+def update_assignment_details(assignment_id, name, start_date, end_date, is_public, daily_late_penalty):
     assignment = Assignment.query.filter(Assignment.id == assignment_id).all()
     if len(assignment) < 1:
         return False
     assignment = assignment[0]
     assignment.name = name
-    assignment.start_date = start_date
-    assignment.end_date = end_date
+    if start_date is not None and start_date != '' and start_date != "" and len(start_date) > 4:
+        date = datetime.strptime(start_date, '%Y-%m-%d')
+    else:
+        date = None
+    assignment.startDate = date
+    if end_date is not None and end_date != '' and end_date != "" and len(end_date) > 4:
+        end_date2 = datetime.strptime(end_date, '%Y-%m-%d')
+    else:
+        end_date2 = None
+    assignment.endDate = end_date2
     assignment.isPublic = is_public
+    assignment.dailyLatePenalty = daily_late_penalty
     db.session.commit()
     return True
