@@ -15,7 +15,11 @@
   <div id="submissions">
     <h2>Test Case Results:</h2>
 
+
     <ul>
+      <li>
+        Late Penalty: {{latePenalty}}
+      </li>
       {% for submissionResult in submissionResults %}
       <li>
         Test Case: {{ submissionResult.testCaseId }}
