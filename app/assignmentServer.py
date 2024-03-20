@@ -15,6 +15,38 @@ from nostril import nonsense
 
 def get_user_submissions_for_assignment(user_id, assignment_id):
     return Submission.query.filter_by(userId=user_id, assignmentId=assignment_id).all()
+def getGrades(assignmentId):
+    # Calculate the total possible score for the assignment
+    total_possible_score = db.session.query(
+        func.sum(TestCase.maxScore)
+    ).filter(TestCase.assignmentId == assignmentId).scalar()
+
+    # First, identify the most recent submission for each student for the assignment
+    recent_submissions = db.session.query(
+        Submission.userId,
+        db.func.max(Submission.id).label('latest_submission_id')
+    ).filter(Submission.assignmentId == assignmentId
+    ).group_by(Submission.userId).subquery()
+
+    # Next, join this with SubmissionResults to aggregate scores only for the most recent submissions
+    aggregated_scores = db.session.query(
+        recent_submissions.c.userId,
+        func.sum(SubmissionResult.score).label('total_score')
+    ).join(SubmissionResult, SubmissionResult.submissionId == recent_submissions.c.latest_submission_id
+    ).group_by(recent_submissions.c.userId).all()
+
+    # Retrieve student numbers and corresponding scores, including total possible score
+    grades = []
+    for userId, total_score in aggregated_scores:
+        user = User.query.get(userId)
+        if user:
+            grades.append({
+                'student_id': user.student_number, 
+                'score': total_score, 
+                'total_possible_score': total_possible_score
+            })
+
+    return grades
 
 
 

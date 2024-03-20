@@ -1,4 +1,4 @@
-from flask import send_file, render_template, render_template_string,request, session, redirect,  url_for, flash, send_from_directory, abort, make_response
+from flask import send_file, Response, render_template, render_template_string,request, session, redirect,  url_for, flash, send_from_directory, abort, make_response
 from app.models import *
 from app.assignmentServer import *
 from app.courseServer import *
@@ -9,6 +9,8 @@ from werkzeug.utils import secure_filename
 import os
 from functools import wraps
 from app.controllers import authenticate
+import csv
+from io import StringIO
 
 
 @app.route('/assignments', methods=['GET'])
@@ -396,3 +398,23 @@ def download_submission(user, assignment_id, submission_id):
             # File not found
             return make_response('File not found', 404)
     return 'Submission not found', 404
+
+@app.route('/download-grades/<int:assignment_id>')
+@authenticate
+def download_grades(user, assignment_id):
+    # Ensure that only instructors can download grades
+    if user.role not in [2, 3]:
+        return make_response('Access denied', 403)
+
+    grades = getGrades(assignment_id)
+
+    # Generate CSV
+    si = StringIO()
+    cw = csv.writer(si)
+    cw.writerow(['Student ID', 'Total Score', 'Max Score'])
+    for grade in grades:
+        cw.writerow([grade['student_id'], grade['score'], grade['total_possible_score']])
+
+    response = Response(si.getvalue(), mimetype='text/csv')
+    response.headers['Content-Disposition'] = f'attachment; filename=grades_assignment_{assignment_id}.csv'
+    return response
