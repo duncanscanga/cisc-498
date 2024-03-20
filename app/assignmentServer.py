@@ -397,16 +397,19 @@ def getLatePenalty(submission):
     """
     assignment = Assignment.query.filter(Assignment.id == submission.assignmentId).first()
     # Check if due date is set; if not, return 0 penalty
+    print("1")
     if assignment.endDate is None:
         return 0
-
+    print("2")
     # Safely convert submissionDate and endDate to datetime if they are not already
     submissionDate = submission.submissionDate if isinstance(submission.submissionDate, datetime) \
         else datetime.strptime(submission.submissionDate, '%Y-%m-%d %H:%M:%S')
+    print("2.5")
+    print(assignment.endDate)
     dueDate = assignment.endDate if isinstance(assignment.endDate, datetime) \
         else datetime.strptime(assignment.endDate, '%Y-%m-%d %H:%M:%S')
-    dailyLatePenalty = submission.assignment.dailyLatePenalty
-
+    dailyLatePenalty = assignment.dailyLatePenalty
+    print("3")
     # Check if the submission was late
     if submissionDate > dueDate:
         # Calculate the number of full days late
@@ -418,6 +421,7 @@ def getLatePenalty(submission):
     else:
         # No penalty if the submission was on time
         total_penalty = 0
+    print("4")
 
     return total_penalty
 

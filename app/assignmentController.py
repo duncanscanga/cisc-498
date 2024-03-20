@@ -371,7 +371,9 @@ def view_grade(user, assignment_id, submission_id):
     
     student = findUserById(submission.userId)
 
+    print("here")
     latePenalty = getLatePenalty(submission)
+    print("here1")
 
     return render_template('view-grades.html',
                            message='', latePenalty=latePenalty, user=user, student=student, submissionResults=submissionResults )
