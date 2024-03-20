@@ -168,12 +168,8 @@ class User(db.Model):
         return "<User %r>" % self.id
 
 
-
 # create all tables
 db.create_all()
-
-
-
 
 
 def register(name, email, student_number, password,role):

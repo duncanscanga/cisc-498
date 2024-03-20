@@ -2,10 +2,10 @@ from app import app
 from app.models import *
 from flask_sqlalchemy import SQLAlchemy
 from flask import render_template, request, session, redirect,  url_for, flash, send_from_directory, abort, make_response
-from sqlalchemy import null, text, desc, asc, and_, or_, nullslast, cast, Float, func
+from sqlalchemy import null, text, desc, asc, and_, or_, nullslast, cast, Float, func, not_
 from validate_email import validate_email
 from datetime import date
-from datetime import datetime
+from datetime import datetime, timedelta
 from secrets import token_urlsafe
 import subprocess
 import os
@@ -14,7 +14,7 @@ import mosspy
 from nostril import nonsense
 
 def get_user_submissions_for_assignment(user_id, assignment_id):
-    return Submission.query.filter_by(userId=user_id, assignmentId=assignment_id).all()
+    return Submission.query.filter_by(userId=user_id, assignmentId=assignment_id, overwritten=0).all()
 def getGrades(assignmentId):
     # Calculate the total possible score for the assignment
     total_possible_score = db.session.query(
@@ -81,14 +81,14 @@ def addSubmissionLog(filename_with_user_id, user, assignment_id):
     for pastSubmission in pastSubmissions:
         #overwrite each past submission to only store the latest
         pastSubmission.overwritten = True
-    submission = Submission(assignmentId = assignment_id, userId=user.id, fileName=filename_with_user_id, submissionDate=func.now())
+    submission = Submission(assignmentId = assignment_id, userId=user.id, fileName=filename_with_user_id, submissionDate=func.now(), overwritten=False)
     db.session.add(submission)
     db.session.commit()
     db.session.flush() 
     return submission
 
 def getSubmissions(course_id, user_id):
-    submissions = Submission.query.filter(Submission.userId == user_id).all()
+    submissions = Submission.query.filter(and_(Submission.userId == user_id, not_(Submission.overwritten))).all()
 
     # submissions = Submission.query.filter(Submission.userId == user_id)\
     #                               .join(Assignment, Assignment.id == Submission.assignmentId)\
@@ -387,6 +387,7 @@ def create_assignment(name, start_date, end_date, userId):
 def getLatePenalty(submission):
     """
     Calculate the late penalty for a submission, considering cases where the assignment end date might be None.
+    Adds a grace period of 5 hours to the assignment end date before calculating penalties.
 
     Parameters:
     - submission: a Submission object with attributes `submissionDate` and a related `assignment` object 
@@ -399,23 +400,28 @@ def getLatePenalty(submission):
     # Check if due date is set; if not, return 0 penalty
     if assignment.endDate is None:
         return 0
+    
     # Safely convert submissionDate and endDate to datetime if they are not already
     submissionDate = submission.submissionDate if isinstance(submission.submissionDate, datetime) \
         else datetime.strptime(submission.submissionDate, '%Y-%m-%d %H:%M:%S')
 
     dueDate = assignment.endDate if isinstance(assignment.endDate, datetime) \
         else datetime.strptime(assignment.endDate, '%Y-%m-%d %H:%M:%S')
+    
+    # Extend due date by 5 hours for the grace period
+    extendedDueDate = dueDate + timedelta(hours=5)
+    
     dailyLatePenalty = assignment.dailyLatePenalty
-    # Check if the submission was late
-    if submissionDate > dueDate:
-        # Calculate the number of full days late
-        delta = submissionDate - dueDate
-        days_late = delta.days
+    # Check if the submission was late, considering the grace period
+    if submissionDate > extendedDueDate:
+        # Calculate the number of full days late, considering any part of a day as a full day
+        delta = submissionDate - extendedDueDate
+        days_late = delta.days + (1 if delta.seconds > 0 else 0)
 
         # Calculate the total penalty
         total_penalty = days_late * dailyLatePenalty
     else:
-        # No penalty if the submission was on time
+        # No penalty if the submission was on time or within the grace period
         total_penalty = 0
 
     return total_penalty
