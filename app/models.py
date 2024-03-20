@@ -19,6 +19,19 @@ This file defines data models and related business logics
 
 db = SQLAlchemy(app)
 
+class HelpRequest(db.Model):
+    """A class to represent Help Requests from users."""
+
+    id = db.Column(db.Integer, primary_key=True)
+    issue_name = db.Column(db.String(255), nullable=False)
+    issue_description = db.Column(db.Text, nullable=False)
+    category = db.Column(db.String(255), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=func.now())
+
+    def __repr__(self):
+        return "<HelpRequest %r>" % self.id
+
 
 class Assignment(db.Model):
     """A class to represent the Assignment Entity."""

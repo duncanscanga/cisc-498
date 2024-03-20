@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+  <h1>Contact Admin</h1>
+  <form method="post" action="{{ url_for('contact_admin') }}">
+    <div class="form-group">
+      <label for="issue_name">Issue Name</label>
+      <input type="text" class="form-control" id="issue_name" name="issue_name" required>
+    </div>
+    <div class="form-group">
+      <label for="issue_description">Issue Description</label>
+      <textarea class="form-control" id="issue_description" name="issue_description" rows="3" required></textarea>
+    </div>
+    <div class="form-group">
+      <label for="category">Category</label>
+      <select class="form-control" id="category" name="category">
+        <option value="Account">Account - Problems related to user login, password, or account permissions</option>
+        <option value="Assignment Submission Error">Assignment Submission Error - unable to upload assignment</option>
+        <option value="System Performance">System Performance - slow response time or other performance issues</option>
+        <option value="Data Error">Data Error - incorrect grade, late mark problem</option>
+        <option value="Other/Feedback">Other/Feedback</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+</div>
+{% endblock %}

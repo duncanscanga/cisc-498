@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="../static/styles/admin_forms.css" />
+
+<div class="container">
+  <h1>Create User</h1>
+  <form method="post">
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input class="form-control" name="username" id="username" required />
+
+      <label for="email">Email</label>
+      <input type="email" class="form-control" name="email" id="email" required />
+
+      <label for="password">Password</label>
+      <input type="password" class="form-control" name="password" id="password" required />
+
+      <label for="student_number">Student Number</label>
+      <input type="text" class="form-control" name="student_number" id="student_number" />
+
+      <label for="role">Role</label>
+      <select class="form-control" name="role" id="role" required>
+        <option value="1">Student</option>
+        <option value="2">TA</option>
+        <option value="3">Instructor</option>
+        <option value="4">Admin</option>
+      </select>
+    </div>
+    <div class="btn-wrapper">
+      <button type="submit" class="btn btn-primary">Create User</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
