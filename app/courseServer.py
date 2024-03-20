@@ -22,6 +22,7 @@ def enrollInCourse(course_code, enrollment_password, user):
     if course and course.enrollmentPassword == enrollment_password:
         # Assume user_id is the ID of the currently logged-in student
         user_course = UserCourse(courseId=course.id, userId=user.id, userRole=1)
+        course.numOfStudents = course.numOfStudents + 1
         db.session.add(user_course)
         db.session.commit()
         return True
@@ -31,18 +32,16 @@ def enrollTaInCourse(courseId, user, ta_email):
     if user.role != 3:
         return False
     
-    if user.role != 1:
-        return False
+    ta = User.query.filter(User.email == ta_email).first()
     
-    userCourse = UserCourse.query.filter(and_(UserCourse.userId == user.id, UserCourse.courseId == courseId)).all()
+    userCourse = UserCourse.query.filter(and_(UserCourse.userId == ta.id, UserCourse.courseId == courseId)).all()
     if len(userCourse) > 0:
         return False
     
     course = Course.query.filter(Course.id == courseId).first()
-
-    user = User.query.filter(User.email == ta_email).first()
-    if course and user and user.role == 2:
-        user_course = UserCourse(courseId=course.id, userId=user.id, userRole=2)
+    if course and ta and ta.role == 2:
+        user_course = UserCourse(courseId=course.id, userId=ta.id, userRole=2)
+        course.numOfTAs = course.numOfTAs + 1
         db.session.add(user_course)
         db.session.commit()
         return True
@@ -91,7 +90,7 @@ def create_course(name, course_code, year, semester, start_date, end_date, userI
 
     course = Course(name=name, courseCode=course_code, year=year,
                     semester=semester, startDate=start_date, endDate=end_date, 
-                    createdBy=userId, enrollmentPassword=enrollment_password) # Add the password here
+                    createdBy=userId, enrollmentPassword=enrollment_password, numOfTAs=0, numOfStudents=0) # Add the password here
     db.session.add(course)
     db.session.commit()
 

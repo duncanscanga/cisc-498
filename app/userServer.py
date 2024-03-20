@@ -61,7 +61,7 @@ def findUsersInCourse(user, course_id, userId):
 def findAssignedStudents(user, user_id, course_id):
     if not (user.role == 3 or user.role == 2):
         return []
-    userTAs = TAStudent.query.filter(TAStudent.taId == user_id).all()
+    userTAs = TAStudent.query.filter(and_(TAStudent.taId == user_id, TAStudent.courseId == course_id)).all()
     students = []
     for userTA in userTAs:
         students.append(User.query.filter(User.id == userTA.studentId).first())

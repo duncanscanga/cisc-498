@@ -88,15 +88,15 @@ def addSubmissionLog(filename_with_user_id, user, assignment_id):
     return submission
 
 def getSubmissions(course_id, user_id):
-    submissions = Submission.query.filter(and_(Submission.userId == user_id, not_(Submission.overwritten))).all()
+    #submissions = Submission.query.filter(and_(Submission.userId == user_id, not_(Submission.overwritten))).all()
 
-    # submissions = Submission.query.filter(Submission.userId == user_id)\
-    #                               .join(Assignment, Assignment.id == Submission.assignmentId)\
-    #                               .join(CourseAssignment, CourseAssignment.assignmentId == Assignment.id)\
-    #                               .filter(CourseAssignment.courseId == course_id)\
-    #                               .order_by(Submission.submissionDate).all()
-    # for submisison in submissions:
-    #     submisison.assignmentName = Assignment.query.filter(Assignment.id == submisison.assignmentId).first().name
+    submissions = Submission.query.filter(and_(Submission.userId == user_id, not_(Submission.overwritten)))\
+                                  .join(Assignment, Assignment.id == Submission.assignmentId)\
+                                  .join(CourseAssignment, CourseAssignment.assignmentId == Assignment.id)\
+                                  .filter(CourseAssignment.courseId == course_id)\
+                                  .order_by(Submission.submissionDate).all()
+    for submisison in submissions:
+        submisison.assignmentName = Assignment.query.filter(Assignment.id == submisison.assignmentId).first().name
     return submissions
 
 def getSubmissionResults(submissionId, submission):

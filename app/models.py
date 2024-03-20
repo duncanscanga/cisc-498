@@ -49,6 +49,8 @@ class Course(db.Model):
     endDate = db.Column(db.DateTime, nullable=True)
     createdBy = db.Column(db.Integer, nullable=True)
     enrollmentPassword = db.Column(db.String(50), nullable=False, unique=True)
+    numOfStudents = db.Column(db.Integer, nullable=True)
+    numOfTAs = db.Column(db.Integer, nullable=True)
 
     def __repr__(self):
         return "<Course %r>" % self.id
