@@ -1,6 +1,9 @@
 from app import app
 from app.models import *        # noqa: F403,F401
 from app.controllers import *   # noqa: F403,F401
+from app.userController import *
+from app.assignmentController import *
+from app.courseController import *
 """
 The last 2 imports are needed to connect the
 controller routes to the app instance.
