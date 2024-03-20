@@ -29,6 +29,8 @@ def get_assignment_details(user, assignmentId):
     assignment = getAssignmentsById(assignmentId, user)
     if assignment is None:
         return redirect('/')
+    
+    course = Course.query.filter(Course.id == assignment.courseId).first()
 
     isOwner = assignment.createdBy == user.id
     isTa = checkIfTa(user, assignment)
@@ -41,8 +43,10 @@ def get_assignment_details(user, assignmentId):
 
     # assignment.startDate = assignment.startDate.strftime('%Y-%m-%d')
     # assignment.endDate = assignment.endDate.strftime('%Y-%m-%d')
+    
+    numOfSubmission = numOfSubmissions(assignmentId)
 
-    return render_template('assignment-details.html', isTa=isTa,  testCases=testCases, submissions=submissions, isOwner=isOwner, user=user, assignment=assignment)
+    return render_template('assignment-details.html', numOfSubmission=numOfSubmission, course=course, isTa=isTa,  testCases=testCases, submissions=submissions, isOwner=isOwner, user=user, assignment=assignment)
 
 
 @app.route('/add-assignments/<int:course_id>', methods=['GET'])

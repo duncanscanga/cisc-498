@@ -111,6 +111,11 @@ def getSubmissionResults(submissionId, submission):
             return updatedSubmissionResults
     return []
 
+def numOfSubmissions(assignmentId):
+    # Query the Submission table to count distinct userIds for the given assignmentId
+    count = db.session.query(Submission.userId).filter(Submission.assignmentId == assignmentId).distinct().count()
+    return count
+
 def get_test_Cases(isOwner, assignmentId):
     testCases = []
     if isOwner:
