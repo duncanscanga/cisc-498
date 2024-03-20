@@ -29,9 +29,21 @@
     <a href="{{ url_for('download_grades', assignment_id=assignment.id) }}" class="btn">Download Grades</a>
     {% endif %}
 
+    {% if isTa %}
+    <a href="{{ url_for('download_grades', assignment_id=assignment.id) }}" class="btn">Download Grades</a>
+    {% endif %}
+
     {% if isOwner %}
     <a href="/edit-assignment/{{ assignment.id }}" class="btn">Edit Assignment Details</a>
     <!-- Plagiarism Check Button for Owners -->
+    <a href="{{ url_for('confirm_assignment', assignment_id=assignment.id) }}" class="btn">Check Submissions for
+        Plagiarism</a>
+    {% if assignment.mossUrl %}
+    <a href="{{assignment.mossUrl}}" target="_blank" class="btn">View Last Moss Report</a>
+    {% endif %}
+    {% endif %}
+
+    {% if isTa %}
     <a href="{{ url_for('confirm_assignment', assignment_id=assignment.id) }}" class="btn">Check Submissions for
         Plagiarism</a>
     {% if assignment.mossUrl %}
@@ -73,6 +85,8 @@
     {% endif %}
     <!-- Conditional Button based on isOwner -->
     {% if isOwner %}
+
+    {% elif isTa %}
 
     {% else %}
 

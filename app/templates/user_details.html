@@ -1,37 +1,48 @@
 {% extends 'base.html' %}
 
-
 {% block header %}
 <h1>{% block title %}User Details{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="../static/styles/user_details.css" />
+<link rel="stylesheet" href="../static/styles/index.css" />
 
 <div class="container">
-  <h1>Student Details: {{ student.username }} ({{ student.student_number }})</h1>
-  <h2>Course: {{ course.name }} ({{ course.courseCode }})</h2>
-  
-  <div class="submissions">
-    <h3>Submissions:</h3>
-    {% if submissions %}
+
+  {% if user is defined and student.role == 2 %}
+  <div class="container">
+    <h1>TA Assignment for Course: {{ course.name }} ({{ course.courseCode }})</h1>
+
+    {% if user.role == 3 %}
+    <h2>Assigned Students:</h2>
+    {% if assignedStudents %}
     <ul>
-      {% for submission in submissions %}
+      {% for assignedStudent in assignedStudents %}
       <li>
-        Assignment: {{ submission.assignmentName}} - 
-        <br>
-        Submitted on: {{ submission.submissionDate.strftime('%Y-%m-%d %H:%M:%S') }} - 
-        <br>
-        File: <a href="{{ url_for('download_submission', assignment_id=submission.assignmentId, submission_id=submission.id) }}">{{ submission.fileName }}</a>
-        <br>
-         <a href="{{ url_for('view_grade', submission_id=submission.id) }}">View Grades</a>
-        <br>
+        {{ assignedStudent.username }} ({{ assignedStudent.student_number }})
+        <!-- Ensure you have a route and method to handle removal -->
+        <form action="{{ url_for('remove_student_from_ta', course_id=course.id, ta_id=student.id, student_id=assignedStudent.id) }}" method="POST" style="display:inline;">
+          <button type="submit" class="btn">Remove</button>
+        </form>
       </li>
       {% endfor %}
     </ul>
     {% else %}
-    <p>No submissions found for this course.</p>
+    <p>No students have been assigned to this TA.</p>
+    {% endif %}
+
+    <h2>Assign Students to TA:</h2>
+    <form action="{{ url_for('assign_students_to_ta', course_id=course.id, ta_id=student.id) }}" method="POST">
+      {% for unassignedStudent in students %}
+      <div>
+        <input type="checkbox" name="student_ids" value="{{ unassignedStudent.id }}">
+        {{ unassignedStudent.username }} ({{ unassignedStudent.student_number }})
+      </div>
+      {% endfor %}
+      <button type="submit" class="btn">Assign Selected Students</button>
+    </form>
     {% endif %}
   </div>
+  {% endif %}
 </div>
 {% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}AutoGrader Result{% endblock %}</h1>
+{% endblock %}
+
+
+{% block content %}
+<link rel="stylesheet" href="../static/styles/index.css" />
+
+<div class="container">
+  <h1>AutoGrader Result: {{ student.username }} ({{ student.student_number }})</h1>
+
+  <div id="submissions">
+    <h2>Submissions:</h2>
+    <ul>
+        {% for submission in submissions %}
+        <li>
+            {{ submission.fileName }} - Submitted on: {{ submission.submissionDate }}
+            <a href="/view-grade/{{submission.assignmentId}}/{{submission.id}}">View
+                Grade</a>
+                <a href="/download-submission/{{submission.assignmentId}}/{{submission.id}}">Download</a>
+        </li>
+
+        {% endfor %}
+    </ul>
+</div>
+
+
+
+</div>
+{% endblock %}

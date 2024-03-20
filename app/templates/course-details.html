@@ -46,28 +46,50 @@
     {% endif %}
 </div>
 
-{% if user is defined and (user.role == 3 or user.role == 2)%}
+{% if user is defined and (user.role == 3)%}
 <div id="users" class="container">
     <h2>Users:</h2>
     {% for u in users %}
     <ul>
+        {% if u is defined and u.role == 1 %}
         <li>
-            <a href="/users/{{ u.id }}/{{course.id}}">{{ u.username }}</a> ({{ u.student_number }}) 
-            {% if u is defined and u.role == 3 %}
-            (Instructor)
-            {% endif %}
-
-            {% if u is defined and u.role == 2 %}
-            (TA)
-            {% endif %}
+            
+            <a href="/view-student/{{ u.id }}/{{course.id}}">{{ u.username }}</a> ({{ u.student_number }}) 
+            
 
         </li>
+            
+            {% endif %}
+            {% if u is defined and u.role == 2 %}
+            <li>
+            
+
+            <a href="/users/{{ u.id }}/{{course.id}}">{{ u.username }}</a> (TA) 
+
+            </li>
+            {% endif %}
+        
     </ul>
     {% endfor %}
     {% if user is defined and user.role == 3 %}
     <a href="/add-ta/{{ course.id }}" class="btn">Add TA</a>
     Share Code: {{course.enrollmentPassword}}
     {% endif %}
+</div>
+{% endif %}
+
+
+
+{% if user is defined and (user.role == 2)%}
+<div id="users" class="container">
+    <h2>Students Assigned To You:</h2>
+    {% for u in students %}
+    <ul>
+        <li>
+            <a href="/view-student/{{ u.id }}/{{course.id}}">{{ u.username }}</a> ({{ u.student_number }}) 
+        </li>
+    </ul>
+    {% endfor %}
 </div>
 {% endif %}
 
