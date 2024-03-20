@@ -100,12 +100,6 @@ def create_course(name, course_code, year, semester, start_date, end_date, userI
     return True
 
 
-def assign_to_course(course_id, assignment_id, userId):
-    courseAssignment = CourseAssignment(courseId = course_id, assignmentId=assignment_id)
-    db.session.add(courseAssignment)
-    db.session.commit()
-    return True
-
 
 
 

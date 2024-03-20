@@ -48,6 +48,7 @@ def get_assignment_details(user, assignmentId):
 @app.route('/add-assignments/<int:course_id>', methods=['GET'])
 @authenticate
 def list_assignments(user, course_id):
+
     assignments = find_user_assignments(user.id)
     return render_template('select_assignment.html', user=user, assignments=assignments, course_id=course_id)
 
@@ -106,31 +107,17 @@ def update_get_assignment(user, assignment_id):
             msg="")
 
 
-@app.route('/create-assignment', methods=['GET'])
+@app.route('/create-assignment/<int:courseId>', methods=['GET'])
 @authenticate
-def get_create_assignment(user):
+def get_create_assignment(user, courseId):
     # Check if the current user's role is 3 (Instructor)
     if user.role == 3:
         # User is an Instructor, show the create-assignment page
-        return render_template('create-assignment.html', user=user)
+        return render_template('create-assignment.html', user=user, courseId=courseId)
     else:
         # User is not an Instructor, redirect to the home page
         return redirect('/')
     
-
-@app.route('/add-assignment/<int:course_id>/<int:assignment_id>', methods=['GET'])
-@authenticate
-def add_assignment_to_course(user, course_id, assignment_id):
-    # Assume `assign_to_course` is a function that creates or updates a record
-    # linking the assignment to the course, potentially checking that
-    # the user has permission to modify the course and owns the assignment.
-    success = assign_to_course(course_id, assignment_id, user.id)
-    if success:
-        return redirect(f'/courses/{course_id}')  # Redirect back to the course details
-    else:
-        return "Error adding assignment", 400
-
-
 
 @app.route('/submit-assignment/<int:assignment_id>', methods=['POST'])
 @authenticate
@@ -299,9 +286,9 @@ def post_create_testcase(user, assignment_id):
     
 
 
-@app.route('/create-assignment', methods=['POST'])
+@app.route('/create-assignment/<int:courseId>', methods=['POST'])
 @authenticate
-def post_create_assignment(user):
+def post_create_assignment(user, courseId):
     # Ensure the user creating the course is an instructor
     if user.role != 3:
         return redirect('/')
@@ -320,14 +307,14 @@ def post_create_assignment(user):
         # Handle incorrect date format or other conversion errors
         return render_template('create-assignment.html', user=user, msg="Invalid date format.")
 
-    success = create_assignment(name,start_date, end_date, user.id)
+    success = create_assignment(name,start_date, end_date, user.id, courseId)
 
     # Redirect based on the operation success
     if success:
-        return redirect('/assignments')
+        return redirect(f'/courses/{courseId}')
     else:
         # Stay on the create course page and show an error message
-        return render_template('create-assignment.html', user=user, msg="Failed to create assignment.")
+        return render_template('create-assignment.html', user=user,courseId=courseId, msg="Failed to create assignment.")
     
 
 @app.route('/delete-testcase/<int:assignment_id>/<int:testcase_id>', methods=['GET'])

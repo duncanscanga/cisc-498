@@ -32,6 +32,7 @@ class Assignment(db.Model):
     mossUrl = db.Column(db.String(800), nullable=True)
     isPublic = db.Column(db.Boolean, nullable=True)
     dailyLatePenalty = db.Column(db.Integer, nullable=True, default=0)  # Daily late penalty rate as a percentage
+    courseId = db.Column(db.Integer, nullable=True)
 
     def __repr__(self):
         return "<Assignment %r>" % self.id

@@ -61,10 +61,7 @@ def getAssignmentsById(assignmentId, user):
 
 def getAssignmentsForCourse(courseId, user):
     try:
-        # Explicitly specify the join condition and filter by userId
-        assignments = db.session.query(Assignment).\
-            join(CourseAssignment, CourseAssignment.assignmentId == Assignment.id).\
-            filter(CourseAssignment.courseId == courseId).all()
+        assignments = Assignment.query.filter(Assignment.courseId == courseId).all()
         return assignments
     except Exception as e:
         print(f"Error fetching assignments for user {user.id}: {e}")
@@ -88,12 +85,11 @@ def addSubmissionLog(filename_with_user_id, user, assignment_id):
     return submission
 
 def getSubmissions(course_id, user_id):
-    #submissions = Submission.query.filter(and_(Submission.userId == user_id, not_(Submission.overwritten))).all()
+    submissions = Submission.query.filter(and_(Submission.userId == user_id, not_(Submission.overwritten))).all()
 
     submissions = Submission.query.filter(and_(Submission.userId == user_id, not_(Submission.overwritten)))\
                                   .join(Assignment, Assignment.id == Submission.assignmentId)\
-                                  .join(CourseAssignment, CourseAssignment.assignmentId == Assignment.id)\
-                                  .filter(CourseAssignment.courseId == course_id)\
+                                  .filter(Assignment.courseId == course_id)\
                                   .order_by(Submission.submissionDate).all()
     for submisison in submissions:
         submisison.assignmentName = Assignment.query.filter(Assignment.id == submisison.assignmentId).first().name
@@ -379,11 +375,13 @@ def find_user_assignments(userId):
 
 
 
-def create_assignment(name, start_date, end_date, userId):
-    assignment = Assignment(name=name,startDate=start_date, endDate=end_date, createdBy = userId)
+def create_assignment(name, start_date, end_date, userId, course_id):
+    assignment = Assignment(name=name,startDate=start_date, endDate=end_date, createdBy = userId, courseId=course_id)
     db.session.add(assignment)
     db.session.commit()
     return True
+
+
 def getLatePenalty(submission):
     """
     Calculate the late penalty for a submission, considering cases where the assignment end date might be None.
@@ -480,8 +478,7 @@ def findStudentsForTa(user, courseId):
     return result
 
 def checkTa(user, courseId):
-    courseAssignment = CourseAssignment.query.filter(CourseAssignment.courseId == courseId).first()
-    courseEnrollment = UserCourse.query.filter(and_(UserCourse.userId == user.id, UserCourse.courseId == courseAssignment.courseId)).all()
+    courseEnrollment = UserCourse.query.filter(and_(UserCourse.userId == user.id, UserCourse.courseId == courseId)).all()
     if len(courseEnrollment) < 1:
         return False
     if courseEnrollment[0].userRole == 2 and user.role == 2:
@@ -489,8 +486,7 @@ def checkTa(user, courseId):
     return False
 
 def checkIfTa(user, assignment):
-    courseAssignment = CourseAssignment.query.filter(CourseAssignment.assignmentId == assignment.id).first()
-    courseEnrollment = UserCourse.query.filter(and_(UserCourse.userId == user.id, UserCourse.courseId == courseAssignment.courseId)).all()
+    courseEnrollment = UserCourse.query.filter(and_(UserCourse.userId == user.id, UserCourse.courseId == assignment.courseId)).all()
     if len(courseEnrollment) < 1:
         return False
     if courseEnrollment[0].userRole == 2 and user.role == 2:

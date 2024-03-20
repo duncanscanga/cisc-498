@@ -48,7 +48,7 @@
     {% endfor %}
 
     {% if user is defined and user.role == 3 %}
-    <a href="/add-assignments/{{ course.id }}" class="btn">Add Assignment</a>
+    <a href="/create-assignment/{{ course.id }}" class="btn">Add Assignment</a>
     {% endif %}
 </div>
 
