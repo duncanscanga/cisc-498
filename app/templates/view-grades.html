@@ -4,37 +4,49 @@
 <h1>{% block title %}AutoGrader Result{% endblock %}</h1>
 {% endblock %}
 
-
 {% block content %}
 <link rel="stylesheet" href="../static/styles/user_details.css" />
 
 <div class="container">
   <h1>AutoGrader Result: {{ student.username }} ({{ student.student_number }})</h1>
 
-
   <div id="submissions">
     <h2>Test Case Results:</h2>
-
-
+    <h3>{{score}} / {{totalScore}}</h3>
     <ul>
+      <li> Late Penalty: {{ latePenalty }} % off </li>
+      {% for result in submissionResults %}
       <li>
-        Late Penalty: {{latePenalty}} % off
+        Test Case: {{ result.testCaseId }}
+        <br>
+        Score: {{ result.score }} / {{ result.maxScore }}
+        <br>
+        Notes: {{ result.notes | replace("\n", "<br>") | safe }}
+        <br>
+        {% if result.type == "Output Comparison" %}
+          {% if result.score != result.maxScore %}
+            <p><strong>Your Output (Up to Divergence):</strong></p>
+            {{ result.preErrorOutput | safe }}
+            {% if result.errorChar %}
+              <span style="background-color: yellow;">{{ result.errorChar | safe }}</span>
+              {{ result.postErrorOutput | safe }}
+              <br>
+              <strong>Expected (Starting from Divergence):</strong>
+              {{ result.expectedPreError | safe }}
+              <span style="background-color: lightgreen;">{{ result.expectedErrorChar | safe }}</span>
+              {{ result.expectedPostError | safe }}
+            {% endif %}
+          {% else %}
+            <p></p>
+          {% endif %}
+        {% elif result.score != result.maxScore %}
+          <p><strong>Output:</strong></p>
+          {{ result.codeOutput | safe }}
+        {% endif %}
+        <br>
       </li>
-      {% for submissionResult in submissionResults %}
-      <li>
-        Test Case: {{ submissionResult.testCaseId }}
-        <br>
-        <!-- {{ submissionResult.fileName }} - Submitted on: {{ submissionResult.gradeDate }}
-        <br> -->
-        Score: {{ submissionResult.score }} / {{ submissionResult.maxScore }}
-        <br>
-         {{ submissionResult.notes | replace("\n", "<br>") | safe }}
-        <br>
-      </li>
-
       {% endfor %}
     </ul>
-
   </div>
 </div>
 {% endblock %}

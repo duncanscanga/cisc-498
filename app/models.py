@@ -110,6 +110,10 @@ class SubmissionResult(db.Model):
     score = db.Column(db.Integer, nullable=False)
     notes = db.Column(db.Text, nullable=True)
     maxScore = db.Column(db.Integer, nullable=True)
+    codeOutput = db.Column(db.Text, nullable=True)
+    expectedOutput = db.Column(db.Text, nullable=True)
+    errorIndex = db.Column(db.Integer, nullable=True)
+    type = db.Column(db.String(50), nullable=False)
 
 
     def __repr__(self):

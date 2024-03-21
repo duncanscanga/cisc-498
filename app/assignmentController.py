@@ -41,7 +41,7 @@ def get_assignment_details(user, assignmentId):
     isTa = checkIfTa(user, assignment)
     print("4")
     
-    submissions = Submission.query.filter_by(assignmentId=assignmentId, userId=user.id).all()
+    submissions = get_user_submissions_for_assignment(user.id, assignmentId)
     print("5")
     
     testCases = TestCase.query.filter_by(assignmentId=assignmentId).all()
@@ -434,9 +434,43 @@ def view_grade(user, assignment_id, submission_id):
     student = findUserById(submission.userId)
 
     latePenalty = getLatePenalty(submission)
+    # Enhance submissionResults with divergence info for template
+    for result in submissionResults:
+        if result.type == "Output Comparison" and result.errorIndex >= 0:
+            # Slice the outputs to highlight divergence in the template
+            result.preErrorOutput = result.codeOutput[:result.errorIndex]
+            result.errorChar = result.codeOutput[result.errorIndex]
+            result.postErrorOutput = result.codeOutput[result.errorIndex + 1:]
 
-    return render_template('view-grades.html',
-                           message='', latePenalty=latePenalty, user=user, student=student, submissionResults=submissionResults )
+            result.expectedPreError = result.expectedOutput[:result.errorIndex]
+            result.expectedErrorChar = result.expectedOutput[result.errorIndex]
+            result.expectedPostError = result.expectedOutput[result.errorIndex + 1:]
+        else:
+            # Ensure these attributes exist even if not used, to avoid template errors
+            result.preErrorOutput = result.codeOutput
+            result.errorChar = ''
+            result.postErrorOutput = ''
+
+            result.expectedPreError = result.expectedOutput
+            result.expectedErrorChar = ''
+            result.expectedPostError = ''
+
+    grade_info =getStudentGrade(assignment_id, submission.userId)
+
+    if grade_info:
+        student_id = grade_info['student_id']
+        total_score = grade_info['score']
+        total_possible_score = grade_info['total_possible_score']
+    else:
+        # Handle the case where grade_info is None, which means no user was found or no grade information is available.
+        student_id = None
+        total_score = 0
+        total_possible_score = 0
+    
+
+    print("loading page")
+
+    return render_template('view-grades.html', score=total_score,  totalScore=total_possible_score,latePenalty=latePenalty, user=user, student=student, submissionResults=submissionResults)
 
 
 

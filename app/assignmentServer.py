@@ -15,6 +15,52 @@ from nostril import nonsense
 
 def get_user_submissions_for_assignment(user_id, assignment_id):
     return Submission.query.filter_by(userId=user_id, assignmentId=assignment_id, overwritten=0).all()
+
+def getStudentGrade(assignmentId, userId):
+    # Calculate the total possible score for the assignment
+    total_possible_score = db.session.query(
+        func.sum(TestCase.maxScore)
+    ).filter(TestCase.assignmentId == assignmentId).scalar()
+
+    if total_possible_score is None:
+        total_possible_score = 0
+
+    # Identify the most recent submission for the student for the assignment
+    latest_submission_id = db.session.query(
+        db.func.max(Submission.id)
+    ).filter(Submission.assignmentId == assignmentId, Submission.userId == userId).scalar()
+
+    # If there's no submission, return 0 as the total score
+    if not latest_submission_id:
+        return {
+            'student_id': User.query.get(userId).student_number,
+            'score': 0,
+            'total_possible_score': total_possible_score
+        }
+
+    # Calculate the total score for the most recent submission
+    total_score = db.session.query(
+        func.sum(SubmissionResult.score)
+    ).filter(SubmissionResult.submissionId == latest_submission_id).scalar()
+
+    if total_score is None:
+        total_score = 0
+
+    # Retrieve the student's number and their score
+    user = User.query.get(userId)
+    if user:
+        return {
+            'student_id': user.student_number,
+            'score': total_score,
+            'total_possible_score': total_possible_score
+        }
+
+    # In case the user is not found, return None or an appropriate default value
+    return None
+
+
+
+
 def getGrades(assignmentId):
     # Calculate the total possible score for the assignment
     total_possible_score = db.session.query(
@@ -47,6 +93,7 @@ def getGrades(assignmentId):
             })
 
     return grades
+
 
 
 
@@ -229,29 +276,116 @@ def auto_grade(c_file_name, input_txt_name):
     
     return 0
 
-def grade_submission(file_path, assignment_id, submission ):
-    #first test case:
-    result = grade_submission2(file_path)
-    logGradingResult(result, "", 1, submission)
+def grade_submission(file_path, assignment_id, submission):
+    print("getting test cases")
+    # Fetch all test cases for the assignment
+    test_cases = TestCase.query.filter_by(assignmentId=assignment_id).all()
+    print("found test cases")
 
-    #second test case:
-    result = testCleanCompile(file_path)
-    logGradingResult(result, "", 2, submission)
+    for test_case in test_cases:
+        print(test_case)
+        if test_case.type == 'Compilation':
+            print("in lop 1")
+            result = testCleanCompile(file_path)
+            print("in lop 2")
+            if result:
+                print("in lop 3")
+                notes = "Compiled Successfully"
+                score = test_case.maxScore
+                print("in lop 4")
+            else:
+                print("in lop 5")
+                notes = "Did not Compile"
+                print("in lop 6")
+                score = 0
+            print("inside the log")
+            logGradingResult(score, notes, test_case.id, submission,"", 0, "")
+            print("outside the log")
+        elif test_case.type == 'Output Comparison':
+            result = testCleanCompile(file_path)
+            if result:
+                print("input testing now")
+                result, notes, diff_index, output, expected = grade_submission_with_input(file_path, test_case.input, test_case.expected_output)
+                if result == 100:
+                    score = test_case.maxScore
+                else:
+                    score = 0
+            else:
+                score = 0
+                notes = "Could not Compile"
+                output = ""
+                diff_index = -1
+                expected = ""
+            print("here with ")
+            logGradingResult(score, notes, test_case.id, submission, output, diff_index, expected)
+        elif test_case.type == 'Code Check':
+            print("in if")
+            notes = checkCode(file_path)
+            score = test_case.maxScore
+            logGradingResult(score, notes, test_case.id, submission, "", 0, "")
+def normalize_whitespace(text):
+    """Normalize the whitespace in the text by replacing sequences of whitespace
+    characters with a single space, and trimming leading and trailing whitespace."""
+    return ' '.join(text.strip().split())
+def find_first_difference_index(str1, str2):
+    """Finds the index of the first difference between two strings.
+    
+    Args:
+        str1 (str): The first string for comparison.
+        str2 (str): The second string for comparison.
+        
+    Returns:
+        int: The index of the first differing character, or -1 if the strings are identical.
+    """
+    min_length = min(len(str1), len(str2))
+    for i in range(min_length):
+        if str1[i] != str2[i]:
+            return i
+    # If one string is a substring of the other, return the start of the extra characters
+    if len(str1) != len(str2):
+        return min_length
+    return -1
 
-    #third test case:
-    notes = checkCode(file_path)
-    logGradingResult(result, notes, 3, submission)
+def grade_submission_with_input(c_file_path, inputs, expected_output):
+    compile_process = subprocess.run(["gcc", c_file_path, "-o", "student_program"],
+                                     capture_output=True, text=True)
+    if compile_process.returncode != 0:
+        return 0, "Compilation Error", None
 
+    run_process = subprocess.run(["./student_program"], input=inputs,
+                                 capture_output=True, text=True, universal_newlines=True)
+    if run_process.returncode != 0:
+        return 0, "Runtime Error", None
 
-    return result
+    actual_output = run_process.stdout.strip()
+    normalized_actual_output = normalize_whitespace(actual_output)
+    normalized_expected_output = normalize_whitespace(expected_output)
+
+    print(normalized_actual_output)
+    print(normalized_expected_output)
+
+    diff_index = find_first_difference_index(normalized_actual_output, normalized_expected_output)
+    
+    if diff_index == -1:
+        return 100, "Output matches expected output", -1, normalized_actual_output, normalized_expected_output
+    else:
+        return 0, f"Output does not match at index {diff_index}.", diff_index, normalized_actual_output, normalized_expected_output
+
 
 def checkCode(c_file_path):
+    print("1")
     with open(c_file_path) as response:
             answer = response.read()
 
+    print("2")
+
     notes = "\n"
 
+    print("3")
+
     notes = notes + 'Analysis of code:'
+
+    print("4")
 
 
     # check for usage of comments in student code
@@ -265,6 +399,7 @@ def checkCode(c_file_path):
         notes = notes +'No comments used in the program.\n'
 
 
+    print("5")
 
    
 
@@ -276,7 +411,7 @@ def checkCode(c_file_path):
         if int(no_space.count(structure) >= 1):
             notes = notes + 'Structure: ' + structure + ' was found\n'
 
-
+    print("6")
 
     notes = notes +'\nVariables:\n'
     x = 0
@@ -324,14 +459,14 @@ def checkCode(c_file_path):
             word += answer[x]
         x += 1
 
-
+    print("10")
 
     return notes
 
-def logGradingResult(result, notes, testCaseId, submission):
+def logGradingResult(result, notes, testCaseId, submission, output, index, expectedOutput):
     submission = Submission.query.filter(Submission.id == int(submission.id)).all()[0]
     testCase = TestCase.query.filter(TestCase.id == testCaseId).all()[0]
-    gradedSubmission = SubmissionResult(assignmentId=submission.assignmentId, testCaseId=testCaseId, notes=notes, submissionId= submission.id, userId=submission.userId, gradeDate=func.now(), fileName=submission.fileName, score=result, maxScore = testCase.maxScore )
+    gradedSubmission = SubmissionResult(assignmentId=submission.assignmentId, type=testCase.type, errorIndex=index, expectedOutput=expectedOutput, codeOutput=output, testCaseId=testCaseId, notes=notes, submissionId= submission.id, userId=submission.userId, gradeDate=func.now(), fileName=submission.fileName, score=result, maxScore = testCase.maxScore )
     db.session.add(gradedSubmission)
     db.session.commit()
 
@@ -339,39 +474,8 @@ def testCleanCompile(c_file_path):
     compile_process = subprocess.run(["gcc", c_file_path, "-o", "student_program"], capture_output=True, text=True)
     if compile_process.returncode != 0:
         # Handle compilation error properly, perhaps return a score of 0 or a specific error code
-        return 0
-    return 100
-
-
-def grade_submission2(c_file_path):
-    compile_process = subprocess.run(["gcc", c_file_path, "-o", "student_program"], capture_output=True, text=True)
-    if compile_process.returncode != 0:
-        # Handle compilation error properly, perhaps return a score of 0 or a specific error code
-        return 0
-
-    inputs = "5000.67 10000.89 25000.01\n2000.82 3000.01 500.33\n10"
-    expected_output_patterns = [
-        r"The cost of truck 1 after \d+ years is \$\d+\.?\d*",
-        # Add more patterns as needed
-    ]
-
-    run_process = subprocess.run(["./student_program"], input=inputs, capture_output=True, text=True)
-    if run_process.returncode != 0:
-        # Handle runtime error properly, perhaps return a score of 0 or a specific error code
-        return 0
-
-    actual_output = run_process.stdout
-
-    score = 100
-    penalty_per_error = 10
-
-    for pattern in expected_output_patterns:
-        if not re.search(pattern, actual_output, re.MULTILINE):
-            score -= penalty_per_error
-
-    # Return the final score as an integer
-    return score
-
+        return False
+    return True
 
 
 def find_user_assignments(userId):

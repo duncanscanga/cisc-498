@@ -25,9 +25,11 @@
     <div class="detail-item">
         <strong>Grades Published?</strong> {{ assignment.isPublic}}
     </div>
+    {% if isOwner %}
     <div class="detail-item">
         <strong>Number of Submissions</strong> {{ numOfSubmission}} / {{course.numOfStudents}}
     </div>
+    {% endif %}
     {% if isOwner %}
     <a href="{{ url_for('download_grades', assignment_id=assignment.id) }}" class="btn">Download Grades</a>
     {% endif %}
