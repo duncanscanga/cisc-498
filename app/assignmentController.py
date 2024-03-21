@@ -22,31 +22,36 @@ def get_assignments(user):
     return render_template('assignments.html',  assignments=assignments, user=user)
 
 
-
 @app.route('/assignments/<int:assignmentId>', methods=['GET'])
 @authenticate
 def get_assignment_details(user, assignmentId):
-    assignment = getAssignmentsById(assignmentId, user)
+    assignment = Assignment.query.filter_by(id=assignmentId).first()
     if assignment is None:
         return redirect('/')
     
-    course = Course.query.filter(Course.id == assignment.courseId).first()
-
-    isOwner = assignment.createdBy == user.id
-    isTa = checkIfTa(user, assignment)
-    submissions = get_user_submissions_for_assignment(user.id, assignmentId)
-    testCases = get_test_Cases(isOwner, assignmentId)
-
-    # Fetch related TestCaseFile entries for each test case
-    for test_case in testCases:
-        test_case.files = TestCaseFile.query.filter_by(testCaseId=test_case.id).all()
-
-    # assignment.startDate = assignment.startDate.strftime('%Y-%m-%d')
-    # assignment.endDate = assignment.endDate.strftime('%Y-%m-%d')
+    print("1")
     
-    numOfSubmission = numOfSubmissions(assignmentId)
+    course = Course.query.filter(Course.id == assignment.courseId).first()
+    print("2")
+    
+    isOwner = assignment.createdBy == user.id
+    print("3")
+    
+    print(assignment.courseId)
+    isTa = checkIfTa(user, assignment)
+    print("4")
+    
+    submissions = Submission.query.filter_by(assignmentId=assignmentId, userId=user.id).all()
+    print("5")
+    
+    testCases = TestCase.query.filter_by(assignmentId=assignmentId).all()
 
-    return render_template('assignment-details.html', numOfSubmission=numOfSubmission, course=course, isTa=isTa,  testCases=testCases, submissions=submissions, isOwner=isOwner, user=user, assignment=assignment)
+    print(testCases)
+
+    numOfSubmission = len(submissions)
+    print("loading page")
+
+    return render_template('assignment-details.html', numOfSubmission=numOfSubmission, course=course, isTa=isTa, testCases=testCases, submissions=submissions, isOwner=isOwner, user=user, assignment=assignment)
 
 
 @app.route('/add-assignments/<int:course_id>', methods=['GET'])
@@ -271,23 +276,87 @@ def upload_testcasefile(user, testcase_id, assignment_id):
     
     return 'File upload failed', 400
 
-@app.route('/create-testcase/<int:assignment_id>', methods=['POST'])
+@app.route('/edit-testcase/<int:assignment_id>/<int:test_case_id>', methods=['GET', 'POST'])
 @authenticate
-def post_create_testcase(user, assignment_id):
-    # Ensure the user creating the course is an instructor
+def edit_testcase(user, assignment_id, test_case_id=None):
+    print("inside1")
+    # Instructor role check
     if user.role != 3:
         return redirect('/')
     
-    success = create_testcase(assignment_id, user.id, True, 100)
+    print("inside8")
+    
+    test_case = TestCase.query.filter(TestCase.id == test_case_id).first()
 
-    # Redirect based on the operation success
-    if success:
-        # Assuming you want to redirect to a page showing all courses or a confirmation page
-        return redirect(f'/assignments/{assignment_id}')
-    else:
-        # Stay on the create course page and show an error message
+    print("inside6")
+
+    if request.method == 'POST':
+        if not test_case:
+            test_case = TestCase(assignmentId=assignment_id, userId=user.id)
+            db.session.add(test_case)
+        # Regardless if new or editing, update fields
+        test_case.visible = request.form.get('visible') == 'on'
+        test_case.type = request.form['type']
+        test_case.input = request.form.get('input_data', '')
+        test_case.expected_output = request.form.get('expected_output', '')
+        test_case.maxScore = int(request.form.get('points', 0))
+        test_case.name = request.form.get('name', '')
+        
+        db.session.commit()
+        flash('Test case saved successfully.', 'success')
         return redirect(f'/assignments/{assignment_id}')
     
+    print("inside5")
+
+    # For GET or failed POST
+    return render_template('edit_testcase.html', user=user, assignment_id=assignment_id, test_case=test_case)
+
+
+
+@app.route('/delete-testcase/<int:test_case_id>', methods=['GET'])
+@authenticate
+def delete_testcase(user, test_case_id):
+    # Ensure the user is authorized to delete the test case
+    if user.role != 3:
+        return abort(403)
+    
+    test_case = TestCase.query.get_or_404(test_case_id)
+    db.session.delete(test_case)
+    db.session.commit()
+    flash('Test case deleted successfully.', 'success')
+    # Redirect back to the assignment details page, adjust as necessary
+    return redirect(url_for('get_assignment_details', user=user, assignmentId=test_case.assignmentId))
+
+
+
+
+@app.route('/create-testcase/<int:assignment_id>', methods=['GET', 'POST'])
+@authenticate
+def post_create_testcase(user, assignment_id):
+    if user.role != 3:  # Instructor role check
+        return redirect('/')
+
+    if request.method == 'POST':
+        print(request.form['type'])
+        test_case = TestCase(
+            visible=request.form.get('visible') == 'on',  # Check if the visibility checkbox is checked
+            assignmentId=assignment_id,
+            userId=user.id,  # Assuming the creator's ID is to be stored
+            # submissionDate is automatically set to current UTC time
+            type=request.form['type'],
+            input=request.form.get('input_data', ''),
+            expected_output=request.form.get('expected_output', ''),
+            maxScore=int(request.form.get('points', 0)),
+            submissionDate = func.now(),
+            name = request.form.get('name', '')
+            # Add any other fields you need to capture from the form
+        )
+        db.session.add(test_case)
+        db.session.commit()
+        flash('Test case created successfully.', 'success')
+        return redirect(f'/assignments/{assignment_id}')
+
+    return render_template('create_testcase.html', user=user, assignment_id=assignment_id)
 
 
 @app.route('/create-assignment/<int:courseId>', methods=['POST'])
@@ -323,7 +392,7 @@ def post_create_assignment(user, courseId):
 
 @app.route('/delete-testcase/<int:assignment_id>/<int:testcase_id>', methods=['GET'])
 @authenticate
-def delete_testcase(user, assignment_id, testcase_id):
+def delete_testcase2(user, assignment_id, testcase_id):
     if user.role != 3:  # Assuming role 3 is an Instructor
         flash("Unauthorized access.")
         return redirect('/')

@@ -33,17 +33,5 @@
     </div>
   </form>
 
-  <!-- Section for Test Cases -->
-  <h2>Test Cases</h2>
-  {% for test_case in testCases %}
-  <div class="test-case">
-    <span>{{ test_case.name }}</span>
-    <!-- Button to delete test case -->
-    <a href="/delete-testcase/{{ assignment.id }}/{{ test_case.id }}" class="btn btn-danger">Delete</a>
-  </div>
-  {% endfor %}
-
-  <!-- Optionally, add a form or method to add new test cases -->
-
 </div>
 {% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+<link rel="stylesheet" href="../static/styles/base.css" />
+
+{% block content %}
+<div class="container">
+    <h1>Edit Test Case</h1>
+    <form action="" method="post">
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" class="form-control" id="name" name="name" value="{{ test_case.name if test_case }}">
+        </div>
+        <div class="form-group">
+            <label for="type">Type</label>
+            <select class="form-control" id="type" name="type">
+                <option value="Code Check" {{ 'selected' if test_case and test_case.type == 'Code Check' }}>Code Check</option>
+                <option value="Compilation" {{ 'selected' if test_case and test_case.type == 'Compilation' }}>Compilation</option>
+                <option value="Output Comparison" {{ 'selected' if test_case and test_case.type == 'Output Comparison' }}>Output Comparison</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="input_data">Input Data</label>
+            <textarea class="form-control" id="input_data" name="input_data">{{ test_case.input if test_case }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="expected_output">Expected Output</label>
+            <textarea class="form-control" id="expected_output" name="expected_output">{{ test_case.expected_output if test_case }}</textarea>
+        </div>
+        <div class="form-group form-check">
+            <label class="form-check-label" for="visible">Visible</label>
+            <input type="checkbox" class="form-check" id="visible" name="visible" {{ 'checked' if test_case and test_case.visible }}>
+           
+        </div>
+        <div class="form-group">
+            <label for="points">Points</label>
+            <input type="number" class="form-control" id="points" name="points" value="{{ test_case.maxScore if test_case }}">
+        </div>
+        
+        <button type="submit" class="btn btn-primary">{{ 'Update' if test_case else 'Create' }}</button>
+    </form>
+</div>
+{% endblock %}

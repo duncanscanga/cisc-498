@@ -150,6 +150,9 @@ class TestCase(db.Model):
     fileName = db.Column(db.String(550), nullable=True)
     name = db.Column(db.String(550), nullable=True)
     maxScore = db.Column(db.Integer, nullable=True)
+    type = db.Column(db.String(50), nullable=False)  # New field to specify the type of test case
+    input = db.Column(db.Text, nullable=True)  # For test cases that require input
+    expected_output = db.Column(db.Text, nullable=True)  # For output comparison tests
 
     def __repr__(self):
         return "<TestCase %r>" % self.id
