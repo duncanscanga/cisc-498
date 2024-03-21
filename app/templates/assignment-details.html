@@ -66,13 +66,17 @@
             {% if test_case.type == 'Code Check' %}
             <!-- Display details specific to Code Check -->
             <p>Checks for comments, variables, etc.</p>
+            {% elif test_case.type == 'File Name' %}
+            <!-- Display details for Compilation check -->
+            <p>Compares File name: Worth {{ test_case.maxScore }} points</p>
+            <p>Expected File Name: {{ test_case.fileName }} </p>
             {% elif test_case.type == 'Compilation' %}
             <!-- Display details for Compilation check -->
             <p>Compiles without errors: Worth {{ test_case.maxScore }} points</p>
             {% elif test_case.type == 'Output Comparison' %}
             <!-- Display details for Output Comparison check -->
-            <p>Input: {{ test_case.input }}</p>
-            <p>Expected Output: {{ test_case.expected_output }}</p>
+            <p>Input: {{ test_case.input | replace("\n", "<br>") | safe  }}</p>
+            <p>Expected Output: {{ test_case.expected_output | replace("\n", "<br>") | safe  }}</p>
             <p>Worth {{ test_case.maxScore }} points</p>
             {% endif %}
             <form action="{{ url_for('toggle_visibility', assignment_id=assignment.id, test_case_id=test_case.id) }}" method="post" style="display: inline;">

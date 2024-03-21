@@ -28,28 +28,24 @@ def get_assignment_details(user, assignmentId):
     assignment = Assignment.query.filter_by(id=assignmentId).first()
     if assignment is None:
         return redirect('/')
-    
-    print("1")
-    
+
+
     course = Course.query.filter(Course.id == assignment.courseId).first()
-    print("2")
     
     isOwner = assignment.createdBy == user.id
-    print("3")
+
     
-    print(assignment.courseId)
+
     isTa = checkIfTa(user, assignment)
-    print("4")
+
     
     submissions = get_user_submissions_for_assignment(user.id, assignmentId)
-    print("5")
+
     
     testCases = TestCase.query.filter_by(assignmentId=assignmentId).all()
 
-    print(testCases)
 
     numOfSubmission = len(submissions)
-    print("loading page")
 
     return render_template('assignment-details.html', numOfSubmission=numOfSubmission, course=course, isTa=isTa, testCases=testCases, submissions=submissions, isOwner=isOwner, user=user, assignment=assignment)
 
@@ -279,16 +275,14 @@ def upload_testcasefile(user, testcase_id, assignment_id):
 @app.route('/edit-testcase/<int:assignment_id>/<int:test_case_id>', methods=['GET', 'POST'])
 @authenticate
 def edit_testcase(user, assignment_id, test_case_id=None):
-    print("inside1")
+
     # Instructor role check
     if user.role != 3:
         return redirect('/')
-    
-    print("inside8")
-    
+
     test_case = TestCase.query.filter(TestCase.id == test_case_id).first()
 
-    print("inside6")
+
 
     if request.method == 'POST':
         if not test_case:
@@ -305,8 +299,7 @@ def edit_testcase(user, assignment_id, test_case_id=None):
         db.session.commit()
         flash('Test case saved successfully.', 'success')
         return redirect(f'/assignments/{assignment_id}')
-    
-    print("inside5")
+
 
     # For GET or failed POST
     return render_template('edit_testcase.html', user=user, assignment_id=assignment_id, test_case=test_case)
@@ -337,7 +330,6 @@ def post_create_testcase(user, assignment_id):
         return redirect('/')
 
     if request.method == 'POST':
-        print(request.form['type'])
         test_case = TestCase(
             visible=request.form.get('visible') == 'on',  # Check if the visibility checkbox is checked
             assignmentId=assignment_id,
@@ -347,6 +339,7 @@ def post_create_testcase(user, assignment_id):
             input=request.form.get('input_data', ''),
             expected_output=request.form.get('expected_output', ''),
             maxScore=int(request.form.get('points', 0)),
+            fileName = request.form.get('file_name', ''),
             submissionDate = func.now(),
             name = request.form.get('name', '')
             # Add any other fields you need to capture from the form
@@ -430,6 +423,9 @@ def view_grade(user, assignment_id, submission_id):
     submission = Submission.query.filter_by(id=submission_id, assignmentId=assignment_id).first()
 
     submissionResults = getSubmissionResults(submission_id, submission)
+
+
+    assignment = Assignment.query.filter(Assignment.id ==assignment_id).first()
     
     student = findUserById(submission.userId)
 
@@ -467,10 +463,32 @@ def view_grade(user, assignment_id, submission_id):
         total_score = 0
         total_possible_score = 0
     
+    if user.role in [2, 3]:
+        return render_template('view-grades-ta.html',assignment=assignment, score=total_score,  totalScore=total_possible_score,latePenalty=latePenalty, user=user, submission=submission,student=student, submissionResults=submissionResults)
+    return render_template('view-grades.html',assignment=assignment, score=total_score,  totalScore=total_possible_score,latePenalty=latePenalty, user=user, student=student, submission=submission, submissionResults=submissionResults)
 
-    print("loading page")
 
-    return render_template('view-grades.html', score=total_score,  totalScore=total_possible_score,latePenalty=latePenalty, user=user, student=student, submissionResults=submissionResults)
+@app.route('/update-grades/<int:assignment_id>/<int:submission_id>', methods=['POST'])
+@authenticate
+def update_grades(user, assignment_id, submission_id):
+    if user.role not in [2, 3]:
+        flash("You do not have permission to update grades.", "danger")
+        return redirect(url_for('index'))
+
+    for key in request.form:
+        if key.startswith('adjust_score_'):
+            result_id = key.split('_')[-1]
+            result = SubmissionResult.query.get(result_id)
+            if result:
+                result.score = request.form.get(f'adjust_score_{result_id}', type=int)
+                result.taComment = request.form.get(f'comments_{result_id}', '')
+                result.approved = f'approve_{result_id}' in request.form
+                result.taId = user.id
+    db.session.commit()
+    flash("Grades updated successfully.", "success")
+    
+    return redirect(url_for('view_grade', user=user, assignment_id=assignment_id, submission_id=submission_id))
+
 
 
 

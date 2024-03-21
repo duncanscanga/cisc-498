@@ -51,11 +51,8 @@ def admin_user_courses(user, user_id):
     if user.role != 4:
         return abort(403)
 
-    print("loading page2")
     user_courses = Course.query.join(UserCourse, UserCourse.courseId == Course.id).filter(UserCourse.userId == user_id).all()
-    print("loading page3")
     all_courses = Course.query.all()  # For adding to a course
-    print("loading page4")
     return render_template('admin_user_courses.html', user=user, user_courses=user_courses, user_id=user_id, all_courses=all_courses)
 
 

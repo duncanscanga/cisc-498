@@ -10,19 +10,24 @@
         </div>
         <div class="form-group">
             <label for="type">Test Case Type</label>
-            <select class="form-control" id="type" name="type">
+            <select class="form-control" id="type" name="type" onchange="toggleFields()">
                 <option value="Code Check">Code Check</option>
                 <option value="Compilation">Compilation</option>
                 <option value="Output Comparison">Output Comparison</option>
+                <option value="File Name">File Name</option>
             </select>
         </div>
-        <div class="form-group">
+        <div class="form-group" id="input_data_group" style="display: none;">
             <label for="input_data">Input Data (for Output Comparison only)</label>
             <textarea class="form-control" id="input_data" name="input_data" rows="3"></textarea>
         </div>
-        <div class="form-group">
+        <div class="form-group" id="expected_output_group" style="display: none;">
             <label for="expected_output">Expected Output (for Output Comparison only)</label>
             <textarea class="form-control" id="expected_output" name="expected_output" rows="3"></textarea>
+        </div>
+        <div class="form-group" id="file_name_group" style="display: none;">
+            <label for="file_name">Expected File Name</label>
+            <input type="text" class="form-control" id="file_name" name="file_name">
         </div>
         <div class="form-group">
             <label for="visible">Visible</label>
@@ -35,4 +40,13 @@
         <button type="submit" class="btn btn-primary">Create Test Case</button>
     </form>
 </div>
+<script>
+function toggleFields() {
+    var type = document.getElementById("type").value;
+    document.getElementById("input_data_group").style.display = type === "Output Comparison" ? "block" : "none";
+    document.getElementById("expected_output_group").style.display = type === "Output Comparison" ? "block" : "none";
+    document.getElementById("file_name_group").style.display = type === "File Name" ? "block" : "none";
+}
+window.onload = toggleFields;
+</script>
 {% endblock %}

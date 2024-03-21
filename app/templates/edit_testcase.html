@@ -15,11 +15,16 @@
                 <option value="Code Check" {{ 'selected' if test_case and test_case.type == 'Code Check' }}>Code Check</option>
                 <option value="Compilation" {{ 'selected' if test_case and test_case.type == 'Compilation' }}>Compilation</option>
                 <option value="Output Comparison" {{ 'selected' if test_case and test_case.type == 'Output Comparison' }}>Output Comparison</option>
+                <option value="File Name" {{ 'selected' if test_case and test_case.type == 'File Name' }}>File Name</option>
             </select>
         </div>
         <div class="form-group">
             <label for="input_data">Input Data</label>
             <textarea class="form-control" id="input_data" name="input_data">{{ test_case.input if test_case }}</textarea>
+        </div>
+        <div class="form-group" id="file_name_group" style="display: none;">
+            <label for="file_name">Expected File Name</label>
+            <input type="text" class="form-control" id="file_name" name="file_name">
         </div>
         <div class="form-group">
             <label for="expected_output">Expected Output</label>

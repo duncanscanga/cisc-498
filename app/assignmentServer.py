@@ -262,49 +262,32 @@ def compile_and_run_c_program(c_file_name, input_txt_name):
             # Handle runtime error properly
             return None
 
-def auto_grade(c_file_name, input_txt_name):
-    print("Grading submission...")
-    
-    # Run the grading logic
-    output = compile_and_run_c_program(c_file_name, input_txt_name)
-    
-    if output is not None:
-        print("Output of the student's program:")
-        print(output)
-    else:
-        print("Failed to compile or execute the student's program.")
-    
-    return 0
-
 def grade_submission(file_path, assignment_id, submission):
-    print("getting test cases")
+
     # Fetch all test cases for the assignment
     test_cases = TestCase.query.filter_by(assignmentId=assignment_id).all()
-    print("found test cases")
+
 
     for test_case in test_cases:
-        print(test_case)
+
         if test_case.type == 'Compilation':
-            print("in lop 1")
+
             result = testCleanCompile(file_path)
-            print("in lop 2")
+  
             if result:
-                print("in lop 3")
+
                 notes = "Compiled Successfully"
                 score = test_case.maxScore
-                print("in lop 4")
             else:
-                print("in lop 5")
                 notes = "Did not Compile"
-                print("in lop 6")
                 score = 0
-            print("inside the log")
+
             logGradingResult(score, notes, test_case.id, submission,"", 0, "")
-            print("outside the log")
+
         elif test_case.type == 'Output Comparison':
             result = testCleanCompile(file_path)
             if result:
-                print("input testing now")
+
                 result, notes, diff_index, output, expected = grade_submission_with_input(file_path, test_case.input, test_case.expected_output)
                 if result == 100:
                     score = test_case.maxScore
@@ -316,12 +299,20 @@ def grade_submission(file_path, assignment_id, submission):
                 output = ""
                 diff_index = -1
                 expected = ""
-            print("here with ")
+
             logGradingResult(score, notes, test_case.id, submission, output, diff_index, expected)
         elif test_case.type == 'Code Check':
-            print("in if")
             notes = checkCode(file_path)
             score = test_case.maxScore
+            logGradingResult(score, notes, test_case.id, submission, "", 0, "")
+        elif test_case.type == 'File Name':
+            equal = test_case.fileName == submission.fileName
+            if equal:
+                score = test_case.maxScore
+                notes = "Correct File Name"
+            else:
+                score = 0
+                notes = "Incorrect File Name"
             logGradingResult(score, notes, test_case.id, submission, "", 0, "")
 def normalize_whitespace(text):
     """Normalize the whitespace in the text by replacing sequences of whitespace
@@ -373,19 +364,15 @@ def grade_submission_with_input(c_file_path, inputs, expected_output):
 
 
 def checkCode(c_file_path):
-    print("1")
     with open(c_file_path) as response:
             answer = response.read()
 
-    print("2")
 
     notes = "\n"
 
-    print("3")
 
     notes = notes + 'Analysis of code:'
 
-    print("4")
 
 
     # check for usage of comments in student code
@@ -397,10 +384,6 @@ def checkCode(c_file_path):
         notes = notes +str(sums) + ' comments used in the program.\n'
     else:
         notes = notes +'No comments used in the program.\n'
-
-
-    print("5")
-
    
 
     #check for structures
@@ -410,8 +393,6 @@ def checkCode(c_file_path):
     for structure in structures_checked:
         if int(no_space.count(structure) >= 1):
             notes = notes + 'Structure: ' + structure + ' was found\n'
-
-    print("6")
 
     notes = notes +'\nVariables:\n'
     x = 0
@@ -459,7 +440,6 @@ def checkCode(c_file_path):
             word += answer[x]
         x += 1
 
-    print("10")
 
     return notes
 

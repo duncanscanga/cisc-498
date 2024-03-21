@@ -35,7 +35,6 @@ def add_ta(user, course_id):
     course = getCourseById(course_id, user)
     if request.method == 'POST':
         ta_email = request.form['taEmail']
-        print("here")
         result = enrollTaInCourse(course_id, user, ta_email)
         
         if result:
