@@ -54,7 +54,9 @@ def findUsersInCourse(user, course_id, userId):
     userCourses = UserCourse.query.filter(and_(UserCourse.courseId == course_id, UserCourse.userRole == 1)).all()
     students = []
     for userCourse in userCourses:
-        students.append(User.query.filter(User.id == userCourse.userId).first())
+        user = User.query.filter(User.id == userCourse.userId).all()
+        if len(user) > 0:
+            students.append(user[0])
 
     return students
 

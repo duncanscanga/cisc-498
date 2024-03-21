@@ -71,32 +71,51 @@ def view_student(user, user_id, course_id):
 @app.route('/users/<int:user_id>/<int:course_id>')
 @authenticate
 def user_details(user, user_id, course_id):
+
+    print("1")
     # Ensure only TAs and instructors can view this page
     if user.role not in [2, 3]:
         return redirect('/')
 
     student = findUserById(user_id)
+    print("2")
     course = getCourseById(course_id, user)
+    print("3")
     submissions = getSubmissions(course_id, user_id)
+    print("4")
 
     if student.role == 2:
+        print("5")
     # Fetch all students in the course
         students = findUsersInCourse(user, course_id, user_id)
+        print("6")
+        print(students)
+
+    
 
     # Fetch all students already assigned to a TA in the course
         assignedStudents = findAssignedStudents(user, user_id, course_id)
+        print("7")
     # Convert assignedStudents to a set of IDs for efficient lookup
         assignedStudentIds = {student.id for student in assignedStudents}
+        print("8")
+
+        print(assignedStudents)
+        print(assignedStudentIds)
 
 
     # Filter out assigned students
         allStudents = [student for student in students if student.id not in assignedStudentIds]
+        print("9")
     
     else:
+        print("7")
         students = []
         
         assignedStudents = []
         allStudents = []
+
+    print("loading page")
 
 
     return render_template('user_details.html', assignedStudents=assignedStudents, students=allStudents, student=student, user=user, course=course, submissions=submissions)
