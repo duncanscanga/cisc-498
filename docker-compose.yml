@@ -1,7 +1,7 @@
 version: "2"
 services:
   app-web:
-    image: samethibault/cmpe327:v1
+    image: dscanga/cisc498:v1
     depends_on:
       - app-db
     links:
@@ -9,7 +9,7 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - db_string=mysql+pymysql://root:root@app-db/qa327
+      - db_string=mysql+pymysql://root:root@app-db/cisc498
     command:  ["./wait-for-it.sh", "app-db:3306", "--strict" , "--timeout=300", "--", "python", "-m", "app"]
     networks:
       - app-site

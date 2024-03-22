@@ -15,6 +15,7 @@ from io import StringIO
 def authenticate(inner_function):
     @wraps(inner_function)
     def wrapped_inner(*args, **kwargs):
+        print("inside")
         # check did we store the key in the session
         if 'logged_in' in session:
             email = session['logged_in']
@@ -24,9 +25,12 @@ def authenticate(inner_function):
                     # if the user exists, call the inner_function
                     # with user as parameter and any arguments it needs
                     return inner_function(user, *args, **kwargs)
+                else:
+                    return redirect('/login')
             except Exception as e:
+                return redirect('/login')
                 # It's a good idea to log the exception here
-                pass
+                # pass
         else:
             # else, redirect to the login page
             return redirect('/login')

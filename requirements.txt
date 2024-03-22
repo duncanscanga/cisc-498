@@ -8,3 +8,4 @@ selenium
 seleniumbase
 pymysql
 mosspy
+git+https://github.com/casics/nostril.git
