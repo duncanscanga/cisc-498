@@ -2,6 +2,9 @@
 
 
 # Setting up local development environment
-python -m app
+pip install -r requirements.txt
 
 sudo pip3 install git+https://github.com/casics/nostril.git
+
+python -m app
+
