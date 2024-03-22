@@ -8,7 +8,12 @@ python -m app
 
 
 # Deploying with Docker
+
+To Update Image:
 docker build --tag=dscanga/cisc498:v1 .   
 
-docker run -p 8081:8081 dscanga/cisc498:v1 python3 -m app
+To Get Latest Image: 
+docker pull dscanga/cisc498:v1
 
+To Run:
+docker run -p 8081:8081 dscanga/cisc498:v1 python3 -m app
