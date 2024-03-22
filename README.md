@@ -4,7 +4,11 @@
 # Setting up local development environment
 pip install -r requirements.txt
 
-sudo pip3 install git+https://github.com/casics/nostril.git
-
 python -m app
+
+
+# Deploying with Docker
+docker build --tag=dscanga/cisc498:v1 .   
+
+docker run -p 8081:8081 dscanga/cisc498:v1 python3 -m app
 
