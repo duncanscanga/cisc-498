@@ -179,7 +179,15 @@ def admin_view_requests(user):
 def admin_delete_user(user, user_id):
     if user.role != 4:
         return abort(403)
+    
+    SubmissionResult.query.filter_by(userId=user_id).delete()
+    Submission.query.filter_by(userId=user_id).delete()
+    UserCourse.query.filter_by(userId=user_id).delete()
+    TAStudent.query.filter( (TAStudent.studentId == user_id) | (TAStudent.taId == user_id) ).delete()
+    HelpRequest.query.filter_by(user_id=user_id).delete()
+    # Add other tables as necessary...
 
+    # Now delete the user
     user_to_delete = User.query.get_or_404(user_id)
     db.session.delete(user_to_delete)
     db.session.commit()
