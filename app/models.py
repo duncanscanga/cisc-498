@@ -364,3 +364,4 @@ def not_empty(word):
     if len(word) == 0:
         return False
     return True
+

@@ -341,13 +341,14 @@ def grade_submission(file_path, assignment_id, submission):
             logGradingResult(score, notes, test_case.id, submission, "", 0, "")
         elif test_case.type == 'File Name':
             equal = test_case.fileName == submission.fileName
+            print(test_case.fileName)
             if equal:
                 score = test_case.maxScore
                 notes = "Correct File Name"
             else:
                 score = 0
                 notes = "Incorrect File Name"
-            logGradingResult(score, notes, test_case.id, submission, "", 0, "")
+            logGradingResult(score, notes, test_case.id, submission, submission.fileName, 0, test_case.fileName)
 def normalize_whitespace(text):
     """Normalize the whitespace in the text by replacing sequences of whitespace
     characters with a single space, and trimming leading and trailing whitespace."""

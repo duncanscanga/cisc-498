@@ -7,51 +7,52 @@
 {% block content %}
 <link rel="stylesheet" href="../static/styles/user_details.css" />
 
-<div class="container">
+<div class="container my-3">
   <h1>AutoGrader Result: {{ student.username }} ({{ student.student_number }})</h1>
+  <h3>{{score}} / {{totalScore}} with {{ submission.manualLateMarks }} late marks off</h3>
 
-  <div id="submissions">
-    <h2>Test Case Results:</h2>
-    <h3>{{score}} / {{totalScore}}</h3>
-    <ul>
-      <li> Late Penalty: {{ submission.manualLateMarks }} marks off </li>
-      {% for result in submissionResults %}
-      <li>
-        Test Case: {{ result.testCaseId }}
-        <br>
-        Score: {{ result.score }} / {{ result.maxScore }}
-        <br>
-        Notes: {{ result.notes | replace("\n", "<br>") | safe }}
-        <br>
-        {% if result.taComment %}
-          <strong>TA Comments:</strong>
-          <p>{{ result.taComment | replace("\n", "<br>") | safe }}</p>
-        {% endif %}
-        <br>
-        {% if result.type == "Output Comparison" %}
-          {% if result.score != result.maxScore %}
-            <p><strong>Your Output (Up to Divergence):</strong></p>
-            {{ result.preErrorOutput | safe }}
-            {% if result.errorChar %}
-              <span style="background-color: yellow;">{{ result.errorChar | safe }}</span>
-              {{ result.postErrorOutput | safe }}
-              <br>
-              <strong>Expected (Starting from Divergence):</strong>
-              {{ result.expectedPreError | safe }}
-              <span style="background-color: lightgreen;">{{ result.expectedErrorChar | safe }}</span>
-              {{ result.expectedPostError | safe }}
-            {% endif %}
-          {% else %}
-            <p></p>
+  <div class="row">
+    {% for result in submissionResults %}
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">{{ result.testCaseName }} ({{ result.testCaseType }})</h5>
+          <h6 class="card-subtitle mb-2 text-muted">Score: {{ result.score }} / {{ result.maxScore }}</h6>
+          {% if result.notes %}
+          <p class="card-text">{{ result.notes | replace("\n", "<br>") | safe }}</p>
           {% endif %}
-        {% elif result.score != result.maxScore %}
-          <p><strong>Output:</strong></p>
-          {{ result.codeOutput | safe }}
+          {% if result.taComment %}
+          <p class="card-text"><strong>TA Comments:</strong> {{ result.taComment | replace("\n", "<br>") | safe }}</p>
+          {% endif %}
+          <!-- Your Output and Expected Output goes here if necessary -->
+
+
+        {% if result.type == "Output Comparison" %}
+        {% if result.score != result.maxScore %}
+          <p><strong>Your Output (Up to Divergence):</strong></p>
+          {{ result.preErrorOutput | safe }}
+          {% if result.errorChar %}
+            <span style="background-color: yellow;">{{ result.errorChar | safe }}</span>
+            {{ result.postErrorOutput | safe }}
+            <br>
+            <strong>Expected (Starting from Divergence):</strong>
+            {{ result.expectedPreError | safe }}
+            <span style="background-color: lightgreen;">{{ result.expectedErrorChar | safe }}</span>
+            {{ result.expectedPostError | safe }}
+          {% endif %}
+        {% else %}
+          <p></p>
         {% endif %}
-        <br>
-      </li>
-      {% endfor %}
-    </ul>
+      {% elif result.score != result.maxScore %}
+        <p><strong>Your Output:</strong></p>
+        {{ result.codeOutput | safe }}
+        <p><strong>Expected Output:</strong></p>
+        {{ result.expectedOutput | safe }}
+      {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
   </div>
 </div>
 {% endblock %}

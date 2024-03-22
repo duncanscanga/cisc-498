@@ -410,62 +410,36 @@ def delete_testcase2(user, assignment_id, testcase_id):
 @app.route('/view-grade/<int:assignment_id>/<int:submission_id>')
 @authenticate
 def view_grade(user, assignment_id, submission_id):
-    # Ensure that only authenticated users, TAs, and instructors can download submissions
     if user.role not in [2, 3]:
-        #check if user is looking at its own work
         submission = Submission.query.filter_by(id=submission_id, assignmentId=assignment_id).first()
         if submission.userId != user.id:
-        # Forbidden access attempt
             return make_response('Access denied', 403)
-        
 
-    # Fetch the submission based on submission_id, user_id, and assignment_id
     submission = Submission.query.filter_by(id=submission_id, assignmentId=assignment_id).first()
-
     submissionResults = getSubmissionResults(submission_id, submission)
-
-
-    assignment = Assignment.query.filter(Assignment.id ==assignment_id).first()
-    
+    assignment = Assignment.query.filter(Assignment.id == assignment_id).first()
     student = findUserById(submission.userId)
-
     latePenalty = getLatePenalty(submission)
-    # Enhance submissionResults with divergence info for template
+
+    # Fetch TestCase details for each SubmissionResult
     for result in submissionResults:
-        if result.type == "Output Comparison" and result.errorIndex >= 0:
-            # Slice the outputs to highlight divergence in the template
-            result.preErrorOutput = result.codeOutput[:result.errorIndex]
-            result.errorChar = result.codeOutput[result.errorIndex]
-            result.postErrorOutput = result.codeOutput[result.errorIndex + 1:]
+        testCase = TestCase.query.filter_by(id=result.testCaseId).first()
+        result.testCaseName = testCase.name if testCase else "Unknown"
+        result.testCaseType = testCase.type if testCase else "Unknown"
 
-            result.expectedPreError = result.expectedOutput[:result.errorIndex]
-            result.expectedErrorChar = result.expectedOutput[result.errorIndex]
-            result.expectedPostError = result.expectedOutput[result.errorIndex + 1:]
-        else:
-            # Ensure these attributes exist even if not used, to avoid template errors
-            result.preErrorOutput = result.codeOutput
-            result.errorChar = ''
-            result.postErrorOutput = ''
-
-            result.expectedPreError = result.expectedOutput
-            result.expectedErrorChar = ''
-            result.expectedPostError = ''
-
-    grade_info =getStudentGrade(assignment_id, submission.userId)
-
+    grade_info = getStudentGrade(assignment_id, submission.userId)
     if grade_info:
         student_id = grade_info['student_id']
         total_score = grade_info['score']
         total_possible_score = grade_info['total_possible_score']
     else:
-        # Handle the case where grade_info is None, which means no user was found or no grade information is available.
         student_id = None
         total_score = 0
         total_possible_score = 0
-    
+
     if user.role in [2, 3]:
-        return render_template('view-grades-ta.html',assignment=assignment, score=total_score,  totalScore=total_possible_score,latePenalty=latePenalty, user=user, submission=submission,student=student, submissionResults=submissionResults)
-    return render_template('view-grades.html',assignment=assignment, score=total_score,  totalScore=total_possible_score,latePenalty=latePenalty, user=user, student=student, submission=submission, submissionResults=submissionResults)
+        return render_template('view-grades-ta.html', assignment=assignment, score=total_score, totalScore=total_possible_score, latePenalty=latePenalty, user=user, submission=submission, student=student, submissionResults=submissionResults)
+    return render_template('view-grades.html', assignment=assignment, score=total_score, totalScore=total_possible_score, latePenalty=latePenalty, user=user, student=student, submission=submission, submissionResults=submissionResults)
 
 
 @app.route('/update-grades/<int:assignment_id>/<int:submission_id>', methods=['POST'])
