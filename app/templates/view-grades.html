@@ -14,7 +14,7 @@
     <h2>Test Case Results:</h2>
     <h3>{{score}} / {{totalScore}}</h3>
     <ul>
-      <li> Late Penalty: {{ latePenalty }} % off </li>
+      <li> Late Penalty: {{ submission.manualLateMarks }} marks off </li>
       {% for result in submissionResults %}
       <li>
         Test Case: {{ result.testCaseId }}

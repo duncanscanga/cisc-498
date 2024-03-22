@@ -14,8 +14,14 @@
     <h2>Test Case Results:</h2>
     <h3>{{score}} / {{totalScore}}</h3>
     <ul>
-      <li> Late Penalty: {{ latePenalty }} % off </li>
+      
+
       <form action="{{ url_for('update_grades', assignment_id=assignment.id, submission_id=submission.id) }}" method="post">
+        <li> Submission Date: {{ submission.submissionDate }} %  </li>
+      <div class="form-group">
+        <label for="manual_late_marks">Late Marks:</label>
+        <input type="number" class="form-control" id="manual_late_marks" name="manual_late_marks" value="{{ submission.manualLateMarks }}">
+      </div>
         {% for result in submissionResults %}
         <li>
           Test Case: {{ result.testCaseId }}

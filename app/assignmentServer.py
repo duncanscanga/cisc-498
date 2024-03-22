@@ -26,12 +26,12 @@ def getStudentGrade(assignmentId, userId):
         total_possible_score = 0
 
     # Identify the most recent submission for the student for the assignment
-    latest_submission_id = db.session.query(
-        db.func.max(Submission.id)
-    ).filter(Submission.assignmentId == assignmentId, Submission.userId == userId).scalar()
+    latest_submission = db.session.query(
+        Submission
+    ).filter(Submission.assignmentId == assignmentId, Submission.userId == userId).order_by(Submission.id.desc()).first()
 
     # If there's no submission, return 0 as the total score
-    if not latest_submission_id:
+    if not latest_submission:
         return {
             'student_id': User.query.get(userId).student_number,
             'score': 0,
@@ -41,22 +41,27 @@ def getStudentGrade(assignmentId, userId):
     # Calculate the total score for the most recent submission
     total_score = db.session.query(
         func.sum(SubmissionResult.score)
-    ).filter(SubmissionResult.submissionId == latest_submission_id).scalar()
+    ).filter(SubmissionResult.submissionId == latest_submission.id).scalar()
 
     if total_score is None:
         total_score = 0
+
+    # Adjust the total score based on manualLateMarks, if any
+    manual_late_marks = latest_submission.manualLateMarks if latest_submission.manualLateMarks else 0
+    adjusted_total_score = max(0, total_score - manual_late_marks)
 
     # Retrieve the student's number and their score
     user = User.query.get(userId)
     if user:
         return {
             'student_id': user.student_number,
-            'score': total_score,
+            'score': adjusted_total_score,  # Use the adjusted score
             'total_possible_score': total_possible_score
         }
 
     # In case the user is not found, return None or an appropriate default value
     return None
+
 
 
 
@@ -129,6 +134,11 @@ def addSubmissionLog(filename_with_user_id, user, assignment_id):
     db.session.add(submission)
     db.session.commit()
     db.session.flush() 
+
+    latePenalty = getLatePenalty(submission)
+    submission.manualLateMarks = latePenalty
+    db.session.commit()
+
     return submission
 
 def getSubmissions(course_id, user_id):

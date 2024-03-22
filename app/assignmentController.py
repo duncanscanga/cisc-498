@@ -484,6 +484,9 @@ def update_grades(user, assignment_id, submission_id):
                 result.taComment = request.form.get(f'comments_{result_id}', '')
                 result.approved = f'approve_{result_id}' in request.form
                 result.taId = user.id
+            submission = Submission.query.get_or_404(submission_id)
+            if 'manual_late_marks' in request.form:
+                submission.manualLateMarks = request.form.get('manual_late_marks', type=int)
     db.session.commit()
     flash("Grades updated successfully.", "success")
     

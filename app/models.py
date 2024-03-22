@@ -92,6 +92,7 @@ class Submission(db.Model):
     fileName = db.Column(db.String(500), nullable=False)
     overwritten = db.Column(db.Boolean, nullable=True)
     assignmentName = db.Column(db.String(500), nullable=False)
+    manualLateMarks = db.Column(db.Integer, nullable=True)
 
     def __repr__(self):
         return "<Submission %r>" % self.id
