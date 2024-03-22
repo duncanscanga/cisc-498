@@ -65,12 +65,14 @@ def getStudentGrade(assignmentId, userId):
 
 
 
-
 def getGrades(assignmentId):
     # Calculate the total possible score for the assignment
     total_possible_score = db.session.query(
         func.sum(TestCase.maxScore)
     ).filter(TestCase.assignmentId == assignmentId).scalar()
+
+    if total_possible_score is None:
+        total_possible_score = 0
 
     # First, identify the most recent submission for each student for the assignment
     recent_submissions = db.session.query(
@@ -79,25 +81,47 @@ def getGrades(assignmentId):
     ).filter(Submission.assignmentId == assignmentId
     ).group_by(Submission.userId).subquery()
 
-    # Next, join this with SubmissionResults to aggregate scores only for the most recent submissions
+    # Next, fetch the manualLateMarks for the most recent submission for each student
+    manual_late_marks_subquery = db.session.query(
+        Submission.userId.label('userId'),
+        Submission.manualLateMarks.label('manualLateMarks')
+    ).join(
+        recent_submissions,
+        Submission.id == recent_submissions.c.latest_submission_id
+    ).subquery()
+
+    # Join this with SubmissionResults to aggregate scores only for the most recent submissions
     aggregated_scores = db.session.query(
         recent_submissions.c.userId,
-        func.sum(SubmissionResult.score).label('total_score')
-    ).join(SubmissionResult, SubmissionResult.submissionId == recent_submissions.c.latest_submission_id
-    ).group_by(recent_submissions.c.userId).all()
+        func.sum(SubmissionResult.score).label('total_score'),
+        manual_late_marks_subquery.c.manualLateMarks
+    ).join(
+        SubmissionResult,
+        SubmissionResult.submissionId == recent_submissions.c.latest_submission_id
+    ).join(
+        manual_late_marks_subquery,
+        manual_late_marks_subquery.c.userId == recent_submissions.c.userId
+    ).group_by(
+        recent_submissions.c.userId,
+        manual_late_marks_subquery.c.manualLateMarks
+    ).all()
 
-    # Retrieve student numbers and corresponding scores, including total possible score
+    # Retrieve student numbers and adjust scores, including total possible score
     grades = []
-    for userId, total_score in aggregated_scores:
+    for userId, total_score, manualLateMarks in aggregated_scores:
         user = User.query.get(userId)
         if user:
+            # Adjust the total score based on manualLateMarks, if any
+            manual_late_marks = manualLateMarks if manualLateMarks else 0
+            adjusted_total_score = max(0, total_score - manual_late_marks)
             grades.append({
-                'student_id': user.student_number, 
-                'score': total_score, 
+                'student_id': user.student_number,
+                'score': adjusted_total_score,  # Use the adjusted score
                 'total_possible_score': total_possible_score
             })
 
     return grades
+
 
 
 
