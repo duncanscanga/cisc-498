@@ -40,3 +40,27 @@ table, th, td {
 .styled-table tbody tr {
     border-bottom: 1px solid #dddddd;
 }
+
+body {
+    height: 100%;
+    width: 100%;
+    background-color: #07070A;
+}
+
+label {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.wrapper {
+    color: #FBFBFB;
+}
+
+label {
+    padding-top: 20px;
+}
+
+.btn-wrapper {
+    margin-top: 20px;
+    width: 100%;
+    text-align: center;
+}
