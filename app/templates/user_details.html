@@ -11,7 +11,9 @@
 
   {% if user is defined and student.role == 2 %}
   <div class="container">
-    <h1>TA Assignment for Course: {{ course.name }} ({{ course.courseCode }})</h1>
+    <h1>TA Assignment for: {{ course.name }} ({{ course.courseCode }})</h1>
+    <h2>TA Assignment for: {{ student.username }} ({{ student.email }})</h2>
+
 
     {% if user.role == 3 %}
     <h2>Assigned Students:</h2>

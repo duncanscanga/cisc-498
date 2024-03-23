@@ -273,28 +273,7 @@ def submit_to_moss(submission_directory, assignmentId):
     db.session.commit()
 
     return url
-def compile_and_run_c_program(c_file_name, input_txt_name):
-    # Assuming current directory contains the files
-    current_dir = ""
-    c_file_path = os.path.join(current_dir, c_file_name)
-    input_txt_path = os.path.join(current_dir, input_txt_name)
 
-    # Compile the C program to an executable named 'student_output'
-    compile_command = ["gcc", c_file_path, "-o", "student_output"]
-    compile_result = subprocess.run(compile_command, capture_output=True)
-    if compile_result.returncode != 0:
-        # Handle compilation error properly
-        return None
-
-    # Run the compiled program with input from the txt file
-    with open(input_txt_path, 'r') as input_file:
-        run_command = ["./student_output"]
-        run_result = subprocess.run(run_command, stdin=input_file, text=True, capture_output=True)
-        if run_result.returncode == 0:
-            return run_result.stdout
-        else:
-            # Handle runtime error properly
-            return None
 
 def grade_submission(file_path, assignment_id, submission):
 
@@ -319,10 +298,13 @@ def grade_submission(file_path, assignment_id, submission):
             logGradingResult(score, notes, test_case.id, submission,"", 0, "")
 
         elif test_case.type == 'Output Comparison':
+            print("checkiugn clean compile")
             result = testCleanCompile(file_path)
+            print("compiled cleanly")
             if result:
-
+                print("grading")
                 result, notes, diff_index, output, expected = grade_submission_with_input(file_path, test_case.input, test_case.expected_output)
+                print("grades")
                 if result == 100:
                     score = test_case.maxScore
                 else:
@@ -333,7 +315,7 @@ def grade_submission(file_path, assignment_id, submission):
                 output = ""
                 diff_index = -1
                 expected = ""
-
+            print("logging")
             logGradingResult(score, notes, test_case.id, submission, output, diff_index, expected)
         elif test_case.type == 'Code Check':
             notes = checkCode(file_path)

@@ -1,3 +1,4 @@
+
 {% extends 'base.html' %}
 
 {% block header %}
@@ -7,52 +8,45 @@
 {% block content %}
 <link rel="stylesheet" href="../static/styles/user_details.css" />
 
-<div class="container my-3">
-  <h1>AutoGrader Result: {{ student.username }} ({{ student.student_number }})</h1>
+<div class="container">
+  <h1>AutoGrader Result For: {{ student.username }} ({{ student.student_number }}) {{ student.email }}</h1>
   <h3>{{score}} / {{totalScore}} with {{ submission.manualLateMarks }} late marks off</h3>
 
-  <div class="row">
-    {% for result in submissionResults %}
-    <div class="col-12">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">{{ result.testCaseName }} ({{ result.testCaseType }})</h5>
-          <h6 class="card-subtitle mb-2 text-muted">Score: {{ result.score }} / {{ result.maxScore }}</h6>
-          {% if result.notes %}
-          <p class="card-text">{{ result.notes | replace("\n", "<br>") | safe }}</p>
-          {% endif %}
-          {% if result.taComment %}
-          <p class="card-text"><strong>TA Comments:</strong> {{ result.taComment | replace("\n", "<br>") | safe }}</p>
-          {% endif %}
-          <!-- Your Output and Expected Output goes here if necessary -->
-
-
-        {% if result.type == "Output Comparison" %}
-        {% if result.score != result.maxScore %}
-          <p><strong>Your Output (Up to Divergence):</strong></p>
-          {{ result.preErrorOutput | safe }}
-          {% if result.errorChar %}
-            <span style="background-color: yellow;">{{ result.errorChar | safe }}</span>
-            {{ result.postErrorOutput | safe }}
-            <br>
-            <strong>Expected (Starting from Divergence):</strong>
-            {{ result.expectedPreError | safe }}
-            <span style="background-color: lightgreen;">{{ result.expectedErrorChar | safe }}</span>
-            {{ result.expectedPostError | safe }}
-          {% endif %}
-        {% else %}
-          <p></p>
-        {% endif %}
-      {% elif result.score != result.maxScore %}
-        <p><strong>Your Output:</strong></p>
-        {{ result.codeOutput | safe }}
-        <p><strong>Expected Output:</strong></p>
-        {{ result.expectedOutput | safe }}
+  {% for result in submissionResults %}
+  <div class="card my-2">
+    <div class="card-body">
+      <h5 class="card-title">{{ result.testCaseName }} - {{ result.testCaseType }}</h5>
+      <h6 class="card-subtitle mb-2 text-muted">Score: {{ result.score }} / {{ result.maxScore }}</h6>
+      
+      {% if result.notes %}
+      <p class="card-text"><strong>Notes:</strong> {{ result.notes }}</p>
       {% endif %}
+      
+      {% if result.taComment %}
+      <p class="card-text"><strong>TA Comments:</strong> {{ result.taComment }}</p>
+      {% endif %}
+      
+      {% if result.type == "Output Comparison" and result.score != result.maxScore %}
+        <div class="row">
+          <div class="col">
+            <p><strong>Your Output:</strong></p>
+            <div>{{ result.preErrorOutput | safe }}<mark>{{ result.errorChar | safe }}</mark>{{ result.postErrorOutput | safe }}</div>
+          </div>
+          <div class="col">
+            <p><strong>Expected Output:</strong></p>
+            <div>{{ result.expectedPreError | safe }}<mark>{{ result.expectedErrorChar | safe }}</mark>{{ result.expectedPostError | safe }}</div>
+          </div>
         </div>
-      </div>
+      {% endif %}
+
+      {% if result.type == "File Name" and result.score != result.maxScore %}
+
+      <p class="card-text"><strong>Your File Name:</strong> {{ result.codeOutput | safe }}</p>
+      <p class="card-text"><strong>Expected File Name:</strong> {{ result.expectedOutput | safe }}</p>
+      {% endif %}
+      
     </div>
-    {% endfor %}
   </div>
+  {% endfor %}
 </div>
 {% endblock %}

@@ -9,10 +9,10 @@
 <link rel="stylesheet" href="../static/styles/index.css" />
 
 <div class="container">
-  <h1>AutoGrader Result: {{ student.username }} ({{ student.student_number }})</h1>
+  <h1>AutoGrader Result: {{ student.username }} ({{ student.student_number }}) {{ student.email }} </h1>
 
   <div id="submissions">
-    <h2>Submissions:</h2>
+    <h2>Latest Submission:</h2>
     <ul>
         {% for submission in submissions %}
         <li>

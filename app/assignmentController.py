@@ -426,6 +426,24 @@ def view_grade(user, assignment_id, submission_id):
         testCase = TestCase.query.filter_by(id=result.testCaseId).first()
         result.testCaseName = testCase.name if testCase else "Unknown"
         result.testCaseType = testCase.type if testCase else "Unknown"
+        if result.type == "Output Comparison" and result.errorIndex >= 0:
+            # Slice the outputs to highlight divergence in the template
+            result.preErrorOutput = result.codeOutput[:result.errorIndex]
+            result.errorChar = result.codeOutput[result.errorIndex]
+            result.postErrorOutput = result.codeOutput[result.errorIndex + 1:]
+
+            result.expectedPreError = result.expectedOutput[:result.errorIndex]
+            result.expectedErrorChar = result.expectedOutput[result.errorIndex]
+            result.expectedPostError = result.expectedOutput[result.errorIndex + 1:]
+        else:
+            # Ensure these attributes exist even if not used, to avoid template errors
+            result.preErrorOutput = result.codeOutput
+            result.errorChar = ''
+            result.postErrorOutput = ''
+
+            result.expectedPreError = result.expectedOutput
+            result.expectedErrorChar = ''
+            result.expectedPostError = ''
 
     grade_info = getStudentGrade(assignment_id, submission.userId)
     if grade_info:
