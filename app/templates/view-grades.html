@@ -14,6 +14,18 @@
   <h3>{{score}} / {{totalScore}}</h3>
   <h3>Submitted at: {{ submission.submissionDate }}  ({{ submission.manualLateMarks }} late marks off)</h3>
 
+ 
+
+  {% if not assignment.isPublic %}
+    <div class="alert alert-warning" role="alert">
+      Note: This is not your final grade. The grades for hidden test cases and manual code review are pending.
+    </div>
+
+    {% else %}
+    <h3>Notes From TA: {{ submission.taOverallComments }}</h3>
+
+  {% endif %}
+
   {% for result in submissionResults %}
   <div class="card my-2">
     <div class="card-body">

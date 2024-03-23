@@ -176,13 +176,16 @@ def getSubmissions(course_id, user_id):
         submisison.assignmentName = Assignment.query.filter(Assignment.id == submisison.assignmentId).first().name
     return submissions
 
-def getSubmissionResults(submissionId, submission):
+def getSubmissionResults(submissionId, submission, user):
     submissionResults = SubmissionResult.query.filter(SubmissionResult.submissionId == submissionId).all()
     if len(submissionResults) > 0:
         assignmnet = Assignment.query.filter(Assignment.id == submission.assignmentId).first()
         if assignmnet.isPublic:
             return submissionResults
         else:
+            #user is a TA or instructor
+            if user.role == 2 or user.role == 3:
+                return submissionResults
             # remove all results where the test cases were hidden
             updatedSubmissionResults = []
             for submissionResult in submissionResults:

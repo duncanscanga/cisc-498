@@ -93,6 +93,7 @@ class Submission(db.Model):
     overwritten = db.Column(db.Boolean, nullable=True)
     assignmentName = db.Column(db.String(500), nullable=False)
     manualLateMarks = db.Column(db.Integer, nullable=True)
+    taOverallComments = db.Column(db.Text, nullable=True)
 
     def __repr__(self):
         return "<Submission %r>" % self.id

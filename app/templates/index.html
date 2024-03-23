@@ -3,13 +3,13 @@
 <link rel="stylesheet" href="../static/styles/base.css" />
 
 {% block header %}
-<h1>{% block title %}Queen's Autograder{% endblock %}</h1>
+<h1>{% block title %}Q Grader{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
 
 <div class="container mt-4">
-    <h3>Courses:</h3>
+    <h3>Your Courses:</h3>
     <div class="row">
         {% for course in courses %}
         <div class="col-12">

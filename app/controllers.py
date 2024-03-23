@@ -15,7 +15,6 @@ from io import StringIO
 def authenticate(inner_function):
     @wraps(inner_function)
     def wrapped_inner(*args, **kwargs):
-        print("inside")
         # check did we store the key in the session
         if 'logged_in' in session:
             email = session['logged_in']
@@ -28,7 +27,7 @@ def authenticate(inner_function):
                 else:
                     return redirect('/login')
             except Exception as e:
-                return redirect('/login')
+                return redirect('/error')
                 # It's a good idea to log the exception here
                 # pass
         else:
@@ -42,6 +41,12 @@ def authenticate(inner_function):
 def login_get():
     return render_template('login.html',
                            message='Please login to your account')
+
+
+@app.route('/error', methods=['GET'])
+def error():
+    return render_template('error.html',
+                           message='')
 
 
 @app.route('/login', methods=['POST'])
@@ -74,7 +79,6 @@ def login_post():
 def home(user):
     courses = find_courses(user)
     if user.role == 1:  # If the user is a student
-        print("finding assignments")
         upcoming_assignments = find_upcoming_assignments(user, 30)  # Implement this function
         print(upcoming_assignments)
         return render_template('index.html', courses=courses, upcoming_assignments=upcoming_assignments, user=user)

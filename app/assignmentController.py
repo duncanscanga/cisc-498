@@ -425,7 +425,7 @@ def view_grade(user, assignment_id, submission_id):
             return make_response('Access denied', 403)
 
     submission = Submission.query.filter_by(id=submission_id, assignmentId=assignment_id).first()
-    submissionResults = getSubmissionResults(submission_id, submission)
+    submissionResults = getSubmissionResults(submission_id, submission, user)
     assignment = Assignment.query.filter(Assignment.id == assignment_id).first()
     student = findUserById(submission.userId)
     latePenalty = getLatePenalty(submission)
@@ -488,6 +488,7 @@ def update_grades(user, assignment_id, submission_id):
             submission = Submission.query.get_or_404(submission_id)
             if 'manual_late_marks' in request.form:
                 submission.manualLateMarks = request.form.get('manual_late_marks', type=int)
+                submission.taOverallComments = request.form.get('taOverallComments', '')
     db.session.commit()
     flash("Grades updated successfully.", "success")
     

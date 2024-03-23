@@ -15,8 +15,12 @@
   
   <form action="{{ url_for('update_grades', assignment_id=assignment.id, submission_id=submission.id) }}" method="post">
     <div class="form-group">
-      <label for="manual_late_marks">Manual Late Marks:</label>
+      <label for="manual_late_marks">Manually Adjust Late Marks:</label>
       <input type="number" class="form-control" id="manual_late_marks" name="manual_late_marks" value="{{ submission.manualLateMarks }}">
+    </div>
+    <div class="form-group">
+      <label for="taOverallComments">Overall Comments:</label>
+      <input type="text" class="form-control" id="taOverallComments" name="taOverallComments" value="{{ submission.taOverallComments }}">
     </div>
 
     {% for result in submissionResults %}
@@ -32,6 +36,18 @@
             <label for="comments_{{result.id}}">TA Comments:</label>
             <textarea class="form-control" id="comments_{{result.id}}" name="comments_{{result.id}}">{{ result.taComment }}</textarea>
           </div>
+          {% if result.type == "Output Comparison" and result.score != result.maxScore %}
+        <div class="row">
+          <div class="col">
+            <p><strong>Your Output:</strong></p>
+            <div class="output">{{ result.preErrorOutput | safe }}<mark>{{ result.errorChar | safe }}</mark>{{ result.postErrorOutput | safe }}</div>
+          </div>
+          <div class="col">
+            <p><strong>Expected Output:</strong></p>
+            <div class="output">{{ result.expectedPreError | safe }}<mark>{{ result.expectedErrorChar | safe }}</mark>{{ result.expectedPostError | safe }}</div>
+          </div>
+        </div>
+      {% endif %}
         </div>
         {% if result.notes %}
         <p><strong>Notes:</strong> {{ result.notes }}</p>
