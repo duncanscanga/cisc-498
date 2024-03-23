@@ -294,6 +294,7 @@ def edit_testcase(user, assignment_id, test_case_id=None):
         test_case.type = request.form['type']
         test_case.input = request.form.get('input_data', '')
         test_case.expected_output = request.form.get('expected_output', '')
+        # test_case.codeCheckAdditional=request.form.get('code_checks', '')
 
         test_case.maxScore = int(request.form.get('points', 0))
         test_case.name = request.form.get('name', '')
@@ -350,7 +351,9 @@ def post_create_testcase(user, assignment_id):
             fileName = request.form.get('file_name', ''),
             variable =  request.form.get('variable_name', ''),
             submissionDate = func.now(),
-            name = request.form.get('name', '')
+            name = request.form.get('name', ''),
+            #codeCheckAdditional=request.form.get('code_checks', '')
+            
             # Add any other fields you need to capture from the form
         )
         db.session.add(test_case)

@@ -119,6 +119,7 @@ class SubmissionResult(db.Model):
     approved = db.Column(db.Boolean, default=False, nullable=False)  # Indicates if the grade has been approved
     manualAdjustment = db.Column(db.Integer, default=0)  # Stores manual adjustments to the score
     taComment = db.Column(db.Text)  # Stores comments from TAs or instructors
+    codeCheckAdditional = db.Column(db.Text, nullable=True)
     taId = db.Column(db.Integer, nullable=True)
 
 

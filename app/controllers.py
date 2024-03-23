@@ -49,6 +49,26 @@ def error():
                            message='')
 
 
+@app.template_filter('get_courses')
+@authenticate
+def get_courses(user, id):
+    if user:
+        courses = get_user_courses(id)
+    else:
+        courses = []
+    return courses
+
+def get_user_courses(user_id):
+    """Fetches courses that the user is enrolled in."""
+    user_courses = UserCourse.query.filter_by(userId=user_id).all()
+    courses = []
+    for user_course in user_courses:
+        course = Course.query.get(user_course.courseId)
+        if course:
+            courses.append(course)
+    return courses
+
+
 @app.route('/login', methods=['POST'])
 def login_post():
     email = request.form.get('email')
@@ -80,7 +100,6 @@ def home(user):
     courses = find_courses(user)
     if user.role == 1:  # If the user is a student
         upcoming_assignments = find_upcoming_assignments(user, 30)  # Implement this function
-        print(upcoming_assignments)
         return render_template('index.html', courses=courses, upcoming_assignments=upcoming_assignments, user=user)
     else:
         return render_template('index.html', courses=courses, user=user, upcoming_assignments=[])

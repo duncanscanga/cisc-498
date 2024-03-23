@@ -25,12 +25,16 @@
         </div>
         <div class="form-group" id="file_name_group" style="display: none;">
             <label for="file_name">Expected File Name</label>
-            <input type="text" class="form-control" id="file_name" name="file_name" value="{{ test_case.file_name if test_case and test_case.type == 'File Name' }}">
+            <input type="text" class="form-control" id="file_name" name="file_name" value="{{ test_case.fileName if test_case and test_case.type == 'File Name' }}">
         </div>
         <div class="form-group" id="variable_name_group" style="display: none;">
             <label for="variable_name">Expected Variable Name</label>
             <input type="text" class="form-control" id="variable_name" name="variable_name" value="{{ test_case.variable if test_case and test_case.type == 'Variable Name' }}">
         </div>
+        <!-- <div class="form-group" id="code_check_group" style="display: none;">
+            <label for="code_checks">Additional Code Checks</label>
+            <textarea class="form-control" id="code_checks" name="code_checks" rows="3"></textarea>
+        </div> -->
         <div class="form-group" id="expected_output_group" style="display: none;">
             <label for="expected_output">Expected Output</label>
             <textarea class="form-control" id="expected_output" name="expected_output">{{ test_case.expected_output if test_case }}</textarea>
@@ -54,6 +58,7 @@
         document.getElementById("expected_output_group").style.display = type === "Output Comparison" ? "block" : "none";
         document.getElementById("file_name_group").style.display = type === "File Name" ? "block" : "none";
         document.getElementById("variable_name_group").style.display = type === "Variable Name" ? "block" : "none";
+        // document.getElementById("code_check_group").style.display = type === "Code Check" ? "block" : "none";
     }
     window.onload = toggleFields;
 </script>

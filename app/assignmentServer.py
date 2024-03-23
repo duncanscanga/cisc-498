@@ -179,15 +179,18 @@ def getSubmissions(course_id, user_id):
 def getSubmissionResults(submissionId, submission, user):
     submissionResults = SubmissionResult.query.filter(SubmissionResult.submissionId == submissionId).all()
     if len(submissionResults) > 0:
+
         assignmnet = Assignment.query.filter(Assignment.id == submission.assignmentId).first()
         if assignmnet.isPublic:
             return submissionResults
         else:
             #user is a TA or instructor
+
             if user.role == 2 or user.role == 3:
                 return submissionResults
             # remove all results where the test cases were hidden
             updatedSubmissionResults = []
+      
             for submissionResult in submissionResults:
                 testCase = TestCase.query.filter(TestCase.id == submissionResult.testCaseId).first()
                 if testCase.visible:
@@ -317,7 +320,7 @@ def grade_submission(file_path, assignment_id, submission):
             print("logging")
             logGradingResult(score, notes, test_case.id, submission, output, diff_index, expected)
         elif test_case.type == 'Code Check':
-            notes = checkCode(file_path)
+            notes = checkCode(file_path, test_case.codeCheckAdditional)
             score = test_case.maxScore
             logGradingResult(score, notes, test_case.id, submission, "", 0, "")
         elif test_case.type == 'File Name':
@@ -416,38 +419,36 @@ def checkIfVariableInCode(c_file_path, variable):
     # If the loop completes without finding the variable, it's not in the file
     return False
 
-def checkCode(c_file_path):
+def checkCode(c_file_path, codeCheckAdditional):
     with open(c_file_path) as response:
-            answer = response.read()
+        answer = response.read()
 
+    notes = "\nAnalysis of code:\n"
 
-    notes = "\n"
-
-
-    notes = notes + 'Analysis of code:'
-
-
-
-    # check for usage of comments in student code
-    notes = notes +'\nComments:\n'
-    single_count = int(answer.count('//'))
-    multiple_count = int(answer.count('/*'))
-    sums = single_count + multiple_count
-    if sums >= 1:
-        notes = notes +str(sums) + ' comments used in the program.\n'
+    # Check for usage of comments in student code
+    notes += "\nComments:\n"
+    single_count = answer.count('//')
+    multiple_count = answer.count('/*')
+    total_comments = single_count + multiple_count
+    if total_comments >= 1:
+        notes += f"{total_comments} comments used in the program.\n"
     else:
-        notes = notes +'No comments used in the program.\n'
-   
+        notes += "No comments used in the program.\n"
 
-    #check for structures
-    notes = notes +'\nStructures:\n'
+    # Check for structures
+    notes += "\nStructures:\n"
     no_space = ''.join(answer.split())
     structures_checked = ['for(', 'while(', 'if(', 'elseif(', 'else(', 'switch(']
+    structures_found = False
     for structure in structures_checked:
-        if int(no_space.count(structure) >= 1):
-            notes = notes + 'Structure: ' + structure + ' was found\n'
+        if no_space.count(structure) >= 1:
+            notes += f"Structure: {structure} was found\n"
+            structures_found = True
+    if not structures_found:
+        notes += "No common programming structures found.\n"
 
-    notes = notes +'\nVariables:\n'
+    # Check for variables
+    notes += "\nVariables:\n"
     x = 0
     word = ''
     while x < len(answer):
@@ -463,13 +464,13 @@ def checkCode(c_file_path):
                             s = vari + ' ' + word + ' found'
                             if(len(word) > 6):
                                 if nonsense(word):
-                                    notes = notes +"\033[1;31m********************************************************************************\033[0m\n"
-                                    notes = notes +s + " - \033[1;31mNONSENSE. CHECK CODE.\033[0m\n"
-                                    notes = notes +"\033[1;31m********************************************************************************\033[0m\n"
+                                    notes += "\n"
+                                    notes +=  s +  " NONSENSE. CHECK CODE.\n"
+                                    notes += "\n"
                                 else:
-                                    notes = notes +s + " - \033[1;32mREAL WORD\033[0m\n"
+                                    notes += s +  " REAL WORD.\n"
                             else:
-                                notes = notes +s + " - \033[1;34mCHECK CODE IF THIS IS NONSENSE, TOO SHORT FOR AUTODETECTOR\033[0m\n"
+                                notes += s +  " CHECK CODE IF THIS IS NONSENSE, TOO SHORT FOR AUTODETECTOR\n"
                             x+=1
                             while answer[x].isspace():
                                 x+=1
@@ -481,13 +482,13 @@ def checkCode(c_file_path):
                     s = vari + ' ' + word + ' found'
                     if(len(word) > 6):
                         if nonsense(word):
-                            notes = notes +"\033[1;31m********************************************************************************\033[0m\n"
-                            notes = notes +s + " - \033[1;31mNONSENSE. CHECK CODE.\033[0m\n"
-                            notes = notes +"\033[1;31m********************************************************************************\033[0m\n"
+                            notes += "\n"
+                            notes += notes + s +  " NONSENSE. CHECK CODE.\n"
+                            notes += "\n"
                         else:
-                            notes = notes +s + " - \033[1;32mREAL WORD\033[0m\n"
+                            notes += s +  " REAL WORD.\n"
                     else:
-                        notes = notes +s + " - \033[1;34mCHECK CODE IF THIS IS NONSENSE, TOO SHORT FOR AUTODETECTOR\033[0m\n"
+                        notes += s +  " CHECK CODE IF THIS IS NONSENSE, TOO SHORT FOR AUTODETECTOR\n"
             word = ''
         else:
             word += answer[x]
@@ -495,6 +496,7 @@ def checkCode(c_file_path):
 
 
     return notes
+
 
 def logGradingResult(result, notes, testCaseId, submission, output, index, expectedOutput):
     submission = Submission.query.filter(Submission.id == int(submission.id)).all()[0]

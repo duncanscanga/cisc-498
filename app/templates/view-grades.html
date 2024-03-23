@@ -33,7 +33,7 @@
       <h6 class="card-subtitle mb-2 text-muted">Score: {{ result.score }} / {{ result.maxScore }}</h6>
       
       {% if result.notes %}
-      <p class="card-text"><strong>Notes:</strong> {{ result.notes }}</p>
+      <p class="card-text"><strong>Notes:</strong><pre>{{ result.notes }}</pre> </p>
       {% endif %}
       
       {% if result.taComment %}

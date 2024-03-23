@@ -34,6 +34,10 @@
             <label for="variable_name">Expected Variable Name</label>
             <input type="text" class="form-control" id="variable_name" name="variable_name">
         </div>
+        <!-- <div class="form-group" id="code_check_group" style="display: none;">
+            <label for="code_checks">Additional Code Checks</label>
+            <textarea class="form-control" id="code_checks" name="code_checks" rows="3"></textarea>
+        </div> -->
         <div class="form-group">
             <label for="visible">Visible</label>
             <input type="checkbox" class="form-check" id="visible" name="visible" checked>
@@ -52,6 +56,7 @@ function toggleFields() {
     document.getElementById("expected_output_group").style.display = type === "Output Comparison" ? "block" : "none";
     document.getElementById("file_name_group").style.display = type === "File Name" ? "block" : "none";
     document.getElementById("variable_name_group").style.display = type === "Variable Name" ? "block" : "none";
+    // document.getElementById("code_check_group").style.display = type === "Code Check" ? "block" : "none";
 }
 window.onload = toggleFields;
 </script>
