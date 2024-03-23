@@ -72,6 +72,8 @@
                         <p>Checks for comments, variables, etc.</p>
                         {% elif test_case.type == 'File Name' %}
                         <p>Expected File Name: {{ test_case.fileName }}</p>
+                        {% elif test_case.type == 'Variable Name' %}
+                        <p>Expected Variable: {{ test_case.variable }}</p>
                         {% elif test_case.type == 'Compilation' %}
                         <p>Compiles without errors.</p>
                         {% elif test_case.type == 'Output Comparison' %}

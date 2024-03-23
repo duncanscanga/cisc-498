@@ -11,29 +11,33 @@
         </div>
         <div class="form-group">
             <label for="type">Type</label>
-            <select class="form-control" id="type" name="type">
+            <select class="form-control" id="type" name="type" onchange="toggleFields()">
                 <option value="Code Check" {{ 'selected' if test_case and test_case.type == 'Code Check' }}>Code Check</option>
                 <option value="Compilation" {{ 'selected' if test_case and test_case.type == 'Compilation' }}>Compilation</option>
                 <option value="Output Comparison" {{ 'selected' if test_case and test_case.type == 'Output Comparison' }}>Output Comparison</option>
                 <option value="File Name" {{ 'selected' if test_case and test_case.type == 'File Name' }}>File Name</option>
+                <option value="Variable Name" {{ 'selected' if test_case and test_case.type == 'Variable Name' }}>Variable Name</option>
             </select>
         </div>
-        <div class="form-group">
+        <div class="form-group" id="input_data_group" style="display: none;">
             <label for="input_data">Input Data</label>
             <textarea class="form-control" id="input_data" name="input_data">{{ test_case.input if test_case }}</textarea>
         </div>
         <div class="form-group" id="file_name_group" style="display: none;">
             <label for="file_name">Expected File Name</label>
-            <input type="text" class="form-control" id="file_name" name="file_name">
+            <input type="text" class="form-control" id="file_name" name="file_name" value="{{ test_case.file_name if test_case and test_case.type == 'File Name' }}">
         </div>
-        <div class="form-group">
+        <div class="form-group" id="variable_name_group" style="display: none;">
+            <label for="variable_name">Expected Variable Name</label>
+            <input type="text" class="form-control" id="variable_name" name="variable_name" value="{{ test_case.variable if test_case and test_case.type == 'Variable Name' }}">
+        </div>
+        <div class="form-group" id="expected_output_group" style="display: none;">
             <label for="expected_output">Expected Output</label>
             <textarea class="form-control" id="expected_output" name="expected_output">{{ test_case.expected_output if test_case }}</textarea>
         </div>
-        <div class="form-group form-check">
-            <label class="form-check-label" for="visible">Visible</label>
+        <div class="form-group">
+            <label for="visible">Visible</label>
             <input type="checkbox" class="form-check" id="visible" name="visible" {{ 'checked' if test_case and test_case.visible }}>
-           
         </div>
         <div class="form-group">
             <label for="points">Points</label>
@@ -43,4 +47,14 @@
         <button type="submit" class="btn btn-primary">{{ 'Update' if test_case else 'Create' }}</button>
     </form>
 </div>
+<script>
+    function toggleFields() {
+        var type = document.getElementById("type").value;
+        document.getElementById("input_data_group").style.display = type === "Output Comparison" ? "block" : "none";
+        document.getElementById("expected_output_group").style.display = type === "Output Comparison" ? "block" : "none";
+        document.getElementById("file_name_group").style.display = type === "File Name" ? "block" : "none";
+        document.getElementById("variable_name_group").style.display = type === "Variable Name" ? "block" : "none";
+    }
+    window.onload = toggleFields;
+</script>
 {% endblock %}

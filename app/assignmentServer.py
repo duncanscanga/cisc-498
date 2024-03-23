@@ -298,13 +298,9 @@ def grade_submission(file_path, assignment_id, submission):
             logGradingResult(score, notes, test_case.id, submission,"", 0, "")
 
         elif test_case.type == 'Output Comparison':
-            print("checkiugn clean compile")
             result = testCleanCompile(file_path)
-            print("compiled cleanly")
             if result:
-                print("grading")
                 result, notes, diff_index, output, expected = grade_submission_with_input(file_path, test_case.input, test_case.expected_output)
-                print("grades")
                 if result == 100:
                     score = test_case.maxScore
                 else:
@@ -331,6 +327,17 @@ def grade_submission(file_path, assignment_id, submission):
                 score = 0
                 notes = "Incorrect File Name"
             logGradingResult(score, notes, test_case.id, submission, submission.fileName, 0, test_case.fileName)
+        elif test_case.type == 'Variable Name':
+            equal = checkIfVariableInCode(file_path, test_case.variable)
+            print(test_case.fileName)
+            if equal:
+                score = test_case.maxScore
+                notes = "Variable used."
+            else:
+                score = 0
+                notes = "Variable not found"
+            logGradingResult(score, notes, test_case.id, submission, "", 0, test_case.variable)
+
 def normalize_whitespace(text):
     """Normalize the whitespace in the text by replacing sequences of whitespace
     characters with a single space, and trimming leading and trailing whitespace."""
@@ -379,6 +386,32 @@ def grade_submission_with_input(c_file_path, inputs, expected_output):
     else:
         return 0, f"Output does not match at index {diff_index}.", diff_index, normalized_actual_output, normalized_expected_output
 
+
+def checkIfVariableInCode(c_file_path, variable):
+    # Open the file to read its contents
+    with open(c_file_path, 'r') as file:
+        content = file.read()
+
+    # Prepare the variable for a more accurate search to avoid partial matches
+    # We add common separators before and after the variable name to ensure we're matching the variable itself
+    # and not a substring of another word. Adjust these as necessary for your specific use cases.
+    search_patterns = [
+        f" {variable} ",  # Variable with spaces on both sides
+        f" {variable}=",  # Variable assignment
+        f"={variable}",   # Variable being assigned
+        f" {variable},",  # Variable in a list of parameters or arguments
+        f"({variable}",   # Variable after an opening parenthesis (function calls, etc.)
+        f",{variable}",   # Variable in a list of parameters or arguments, not the first one
+        f",{variable} ",  # Variable in a list, followed by a space
+    ]
+
+    # Search for the variable in the content using the patterns defined above
+    for pattern in search_patterns:
+        if pattern in content:
+            return True  # Variable found
+
+    # If the loop completes without finding the variable, it's not in the file
+    return False
 
 def checkCode(c_file_path):
     with open(c_file_path) as response:

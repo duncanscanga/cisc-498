@@ -157,6 +157,7 @@ class TestCase(db.Model):
     userId = db.Column(db.Integer, nullable=False)
     submissionDate = db.Column(db.DateTime, nullable=False)
     fileName = db.Column(db.String(550), nullable=True)
+    variable = db.Column(db.String(550), nullable=True)
     name = db.Column(db.String(550), nullable=True)
     maxScore = db.Column(db.Integer, nullable=True)
     type = db.Column(db.String(50), nullable=False)  # New field to specify the type of test case

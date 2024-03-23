@@ -15,6 +15,7 @@
                 <option value="Compilation">Compilation</option>
                 <option value="Output Comparison">Output Comparison</option>
                 <option value="File Name">File Name</option>
+                <option value="Variable Name">Variable Name</option>
             </select>
         </div>
         <div class="form-group" id="input_data_group" style="display: none;">
@@ -28,6 +29,10 @@
         <div class="form-group" id="file_name_group" style="display: none;">
             <label for="file_name">Expected File Name</label>
             <input type="text" class="form-control" id="file_name" name="file_name">
+        </div>
+        <div class="form-group" id="variable_name_group" style="display: none;">
+            <label for="variable_name">Expected Variable Name</label>
+            <input type="text" class="form-control" id="variable_name" name="variable_name">
         </div>
         <div class="form-group">
             <label for="visible">Visible</label>
@@ -46,6 +51,7 @@ function toggleFields() {
     document.getElementById("input_data_group").style.display = type === "Output Comparison" ? "block" : "none";
     document.getElementById("expected_output_group").style.display = type === "Output Comparison" ? "block" : "none";
     document.getElementById("file_name_group").style.display = type === "File Name" ? "block" : "none";
+    document.getElementById("variable_name_group").style.display = type === "Variable Name" ? "block" : "none";
 }
 window.onload = toggleFields;
 </script>

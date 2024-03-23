@@ -285,6 +285,7 @@ def edit_testcase(user, assignment_id, test_case_id=None):
 
 
     if request.method == 'POST':
+
         if not test_case:
             test_case = TestCase(assignmentId=assignment_id, userId=user.id)
             db.session.add(test_case)
@@ -293,11 +294,18 @@ def edit_testcase(user, assignment_id, test_case_id=None):
         test_case.type = request.form['type']
         test_case.input = request.form.get('input_data', '')
         test_case.expected_output = request.form.get('expected_output', '')
+
         test_case.maxScore = int(request.form.get('points', 0))
         test_case.name = request.form.get('name', '')
-        
+
+        test_case.fileName = request.form.get('file_name', '')
+
+        test_case.variable =  request.form.get('variable_name', '')
+
         db.session.commit()
+
         flash('Test case saved successfully.', 'success')
+
         return redirect(f'/assignments/{assignment_id}')
 
 
@@ -340,6 +348,7 @@ def post_create_testcase(user, assignment_id):
             expected_output=request.form.get('expected_output', ''),
             maxScore=int(request.form.get('points', 0)),
             fileName = request.form.get('file_name', ''),
+            variable =  request.form.get('variable_name', ''),
             submissionDate = func.now(),
             name = request.form.get('name', '')
             # Add any other fields you need to capture from the form
