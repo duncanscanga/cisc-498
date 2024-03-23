@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 <link rel="stylesheet" href="../static/styles/base.css" />
 
 {% block header %}
@@ -7,25 +8,43 @@
 
 {% block content %}
 
-<h3>Courses:</h3>
-
-<div id="courses">
-    <table>
-        <tr>
-          <th>Name</th>
-          <th>Course Code</th>
-          <th>Year</th>
-          <th>Semester</th>
-        </tr>
+<div class="container mt-4">
+    <h3>Courses:</h3>
+    <div class="row">
         {% for course in courses %}
-        <tr>
-            <td><a href="/courses/{{course.id}}">{{ course.name }}</a></td>
-            <td>{{ course.courseCode }}</td>
-            <td>{{ course.year }}</td>
-            <td>{{ course.semester }}</td>
-        </tr>
+        <div class="col-12">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title"><a href="/courses/{{course.id}}">{{ course.name }}</a></h5>
+                    <p class="card-text">
+                        Course Code: {{ course.courseCode }}<br>
+                        Year: {{ course.year }}<br>
+                        Semester: {{ course.semester }}
+                    </p>
+                </div>
+            </div>
+        </div>
         {% endfor %}
-    </table>
+    </div>
+
+    {% if user.role == 1 %}
+    <h3>Upcoming Assignments:</h3>
+    <div class="row">
+        {% for assignment in upcoming_assignments %}
+        <div class="col-12">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title"><a href="/assignments/{{assignment.id}}">{{ assignment.name }}</a></h5>
+                    <p class="card-text">
+                        Due Date: {{ assignment.endDate.strftime('%Y-%m-%d %H:%M') }}<br>
+                        <!-- Adjust course name retrieval based on your models' relationships -->
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 </div>
 
 {% endblock %}

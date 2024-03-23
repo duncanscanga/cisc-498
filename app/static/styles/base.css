@@ -117,3 +117,16 @@ ul {
 .nav-link{
     color: white !important;
 }
+
+.card-title a {
+    color: #007bff; /* Bootstrap primary color */
+    text-decoration: none;
+}
+
+.card-title a:hover {
+    text-decoration: underline;
+}
+
+.card-text {
+    font-size: 0.9rem;
+}

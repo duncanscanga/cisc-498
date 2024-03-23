@@ -4,7 +4,7 @@ from app.assignmentServer import *
 from app.courseServer import *
 from app.userServer import *
 from app import app
-from datetime import datetime
+from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 import os
 from functools import wraps
@@ -69,12 +69,34 @@ def login_post():
 
 
 
-
 @app.route('/')
 @authenticate
 def home(user):
     courses = find_courses(user)
-    return render_template('index.html',  courses=courses, user=user)
+    if user.role == 1:  # If the user is a student
+        print("finding assignments")
+        upcoming_assignments = find_upcoming_assignments(user, 30)  # Implement this function
+        print(upcoming_assignments)
+        return render_template('index.html', courses=courses, upcoming_assignments=upcoming_assignments, user=user)
+    else:
+        return render_template('index.html', courses=courses, user=user, upcoming_assignments=[])
+
+def find_upcoming_assignments(user, days_ahead=30):
+    """
+    Fetch assignments due in the next 'days_ahead' days for a student.
+    Adjust as necessary based on your database structure and requirements.
+    """
+    today = datetime.now()
+    due_date_threshold = today + timedelta(days=days_ahead)
+    
+    # Assuming a direct relationship between assignments and courses here
+    assignments = Assignment.query.join(Course, Course.id == Assignment.courseId).join(UserCourse, UserCourse.courseId == Course.id).filter(
+        UserCourse.userId == user.id,
+        Assignment.endDate >= today,
+        Assignment.endDate <= due_date_threshold,
+        UserCourse.userRole == 1  # Ensures this fetches only for students
+    ).all()
+    return assignments
 
 
 @app.route('/register', methods=['GET'])
