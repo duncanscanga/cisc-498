@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-<link rel="stylesheet" href="../static/styles/index.css" />
+<link rel="stylesheet" href="../static/styles/base.css" />
 
 {% block header %}
 <h1>{% block title %}Assignment Details - {{ assignment.name }}{% endblock %}</h1>
@@ -56,40 +56,41 @@
     {% endif %}
     {% endif %}
 
-
     {% if isOwner %}
     <div id="test-cases">
         <h2>Test Cases:</h2>
-        {% for test_case in testCases %}
-        <div>
-            <p>{{ test_case.name }}- Type: {{ test_case.type }} - Visible: {{ test_case.visible  }}</p>
-            {% if test_case.type == 'Code Check' %}
-            <!-- Display details specific to Code Check -->
-            <p>Checks for comments, variables, etc.</p>
-            {% elif test_case.type == 'File Name' %}
-            <!-- Display details for Compilation check -->
-            <p>Compares File name: Worth {{ test_case.maxScore }} points</p>
-            <p>Expected File Name: {{ test_case.fileName }} </p>
-            {% elif test_case.type == 'Compilation' %}
-            <!-- Display details for Compilation check -->
-            <p>Compiles without errors: Worth {{ test_case.maxScore }} points</p>
-            {% elif test_case.type == 'Output Comparison' %}
-            <!-- Display details for Output Comparison check -->
-            <p>Input: {{ test_case.input | replace("\n", "<br>") | safe  }}</p>
-            <p>Expected Output: {{ test_case.expected_output | replace("\n", "<br>") | safe  }}</p>
-            <p>Worth {{ test_case.maxScore }} points</p>
-            {% endif %}
-            <form action="{{ url_for('toggle_visibility', assignment_id=assignment.id, test_case_id=test_case.id) }}" method="post" style="display: inline;">
-                <input type="submit" class="btn btn-info" value="Toggle Visibility">
-            </form>
-            <a href="{{ url_for('edit_testcase', assignment_id=assignment.id, test_case_id=test_case.id) }}"
-                class="btn btn-secondary">Edit</a>
-            <!-- Delete Button -->
-            <button type="button" class="btn btn-danger" onclick="confirmDelete('{{ test_case.id }}')">Delete</button>
+        <div class="row">
+            {% for test_case in testCases %}
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        {{ test_case.name }} - {{ test_case.type }}
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text"><strong>Visibility:</strong> {{ "Visible" if test_case.visible else "Hidden" }}</p>
+                        {% if test_case.type == 'Code Check' %}
+                        <p>Checks for comments, variables, etc.</p>
+                        {% elif test_case.type == 'File Name' %}
+                        <p>Expected File Name: {{ test_case.fileName }}</p>
+                        {% elif test_case.type == 'Compilation' %}
+                        <p>Compiles without errors.</p>
+                        {% elif test_case.type == 'Output Comparison' %}
+                        <p>Input: <pre>{{ test_case.input }}</pre></p>
+                        <p>Expected Output: <pre>{{ test_case.expected_output }}</pre></p>
+                        {% endif %}
+                        <p>Points: {{ test_case.maxScore }}</p>
+                    </div>
+                    <div class="card-footer text-muted">
+                        <form action="{{ url_for('toggle_visibility', assignment_id=assignment.id, test_case_id=test_case.id) }}" method="post" style="display: inline;">
+                            <button type="submit" class="btn btn-info btn-sm">Toggle Visibility</button>
+                        </form>
+                        <a href="{{ url_for('edit_testcase', assignment_id=assignment.id, test_case_id=test_case.id) }}" class="btn btn-secondary btn-sm">Edit</a>
+                        <button onclick="confirmDelete('{{ test_case.id }}')" class="btn btn-danger btn-sm">Delete</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
         </div>
-        <br>
-    {% endfor %}
-    </div>
     
 
     <!-- Create a New Test Case for This Assignment -->
@@ -104,21 +105,22 @@
 {% elif isTa %}
 
 {% else %}
-
-<div id="submissions">
-    <h2>Submissions:</h2>
-    <ul>
+<div id="submissions" >
+    <h2>Latest Submission:</h2>
+    <div class="row">
         {% for submission in submissions %}
-        <li>
-            {{ submission.fileName }} - Submitted on: {{ submission.submissionDate }}
-            <a href="{{ url_for('view_grade', assignment_id=assignment.id, submission_id=submission.id) }}">View
-                Grade</a>
-            <a href="{{ url_for('download_submission', assignment_id=assignment.id, submission_id=submission.id) }}">Download
-                File</a>
-        </li>
-
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ submission.fileName }}</h5>
+                    <p class="card-text">Submitted on: {{ submission.submissionDate }}</p>
+                    <a href="{{ url_for('view_grade', assignment_id=assignment.id, submission_id=submission.id) }}" class="btn btn-primary">View Grade</a>
+                    <a href="{{ url_for('download_submission', assignment_id=assignment.id, submission_id=submission.id) }}" class="btn btn-secondary">Download File</a>
+                </div>
+            </div>
+        </div>
         {% endfor %}
-    </ul>
+    </div>
 </div>
 
 <form action="/submit-assignment/{{ assignment.id }}" method="post" enctype="multipart/form-data">

@@ -9,8 +9,10 @@
 <link rel="stylesheet" href="../static/styles/base.css" />
 
 <div class="container">
-  <h1>AutoGrader Result For: {{ student.username }} ({{ student.student_number }}) {{ student.email }}</h1>
-  <h3>{{score}} / {{totalScore}} with {{ submission.manualLateMarks }} late marks off</h3>
+  <h1>AutoGrader Result For: {{ student.username }} ({{ student.student_number }}) {{ student.email }} </h1>
+  <h2>{{assignment.name}}</h2>
+  <h3>{{score}} / {{totalScore}}</h3>
+  <h3>Submitted at: {{ submission.submissionDate }}  ({{ submission.manualLateMarks }} late marks off)</h3>
 
   {% for result in submissionResults %}
   <div class="card my-2">
@@ -30,11 +32,11 @@
         <div class="row">
           <div class="col">
             <p><strong>Your Output:</strong></p>
-            <div>{{ result.preErrorOutput | safe }}<mark>{{ result.errorChar | safe }}</mark>{{ result.postErrorOutput | safe }}</div>
+            <div class="output">{{ result.preErrorOutput | safe }}<mark>{{ result.errorChar | safe }}</mark>{{ result.postErrorOutput | safe }}</div>
           </div>
           <div class="col">
             <p><strong>Expected Output:</strong></p>
-            <div>{{ result.expectedPreError | safe }}<mark>{{ result.expectedErrorChar | safe }}</mark>{{ result.expectedPostError | safe }}</div>
+            <div class="output">{{ result.expectedPreError | safe }}<mark>{{ result.expectedErrorChar | safe }}</mark>{{ result.expectedPostError | safe }}</div>
           </div>
         </div>
       {% endif %}

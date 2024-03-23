@@ -1,13 +1,119 @@
 body {
     height: 100%;
     width: 100%;
-    background-color: #07070A;
+    background-color: #F7F7F7; /* Light grey background */
 }
 
 label {
-    color: rgba(255, 255, 255, 0.8);
+    color: #343A40; /* Dark grey text color for better contrast on light background */
 }
 
 .wrapper {
-    color: #FBFBFB;
+    color: #343A40; /* Dark grey text color */
+}
+
+.navbar {
+    background-color: #6f42c1; /* A shade of purple for the navbar */
+}
+
+table, th, td {
+    border: 1px solid #CCCCCC; /* Lighter border for better readability on light background */
+}
+
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 0.9em;
+    font-family: sans-serif;
+    min-width: 400px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+.styled-table thead tr {
+    background-color: #6f42c1; /* Matching the purplish navbar */
+    color: #FFFFFF;
+    text-align: left;
+}
+
+.styled-table th,
+.styled-table td {
+    padding: 12px 15px;
+}
+
+.styled-table tbody tr {
+    border-bottom: 1px solid #dddddd;
+}
+
+.styled-table tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3; /* Zebra striping for rows */
+}
+
+.styled-table tbody tr:last-of-type {
+    border-bottom: 2px solid #6f42c1; /* Matching the purplish navbar */
+}
+
+body {
+    height: 100%;
+    width: 100%;
+    background-color: #F7F7F7; /* Updated background color */
+}
+
+label {
+    color: #343A40; /* Updated label color for readability */
+}
+
+.wrapper {
+    color: #343A40; /* Updated text color */
+}
+
+label {
+    padding-top: 20px;
+}
+
+.btn-wrapper {
+    margin-top: 20px;
+    width: 100%;
+    text-align: center;
+}
+
+.btn-primary {
+    background-color: #6f42c1; /* Matching the purplish navbar */
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #5e379d; /* A slightly darker shade for hover state */
+}
+h1, h2, h3, h4, h5, h6 {
+    color: #343A40; /* Dark gray for better visibility on light background */
+    padding-bottom: 0%;
+}
+
+.form-control {
+    color: #343A40; /* Dark grey text for contrast */
+    background-color: #FFFFFF; /* White background for the input */
+    border: 1px solid #CCCCCC; /* Light grey border for definition */
+}
+
+.form-control:focus {
+    color: #343A40; /* Dark grey text for contrast */
+    border-color: #6f42c1; /* Purple border on focus, matching navbar color */
+    box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25); /* Subtle shadow with a purple tint */
+}
+
+li {
+    color: #343A40 !important; /* Dark grey text for contrast */
+}
+ul {
+    color: #343A40; /* Dark grey text for contrast */
+}
+
+.output {
+    color: gray; /* Dark grey text for contrast */
+
+}
+
+.nav-link{
+    color: white !important;
 }

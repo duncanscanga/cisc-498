@@ -60,6 +60,9 @@ def view_student(user, user_id, course_id):
         course = getCourseById(course_id, user)
         submissions = getSubmissions(course_id, user_id)
 
+        for submission in submissions:
+            submission.assignmentName = Assignment.query.filter(Assignment.id == submission.assignmentId).first().name
+
 
         return render_template('view-student.html',  student=student, user=user, course=course, submissions=submissions)
     except Exception as e:
