@@ -21,6 +21,7 @@
                 <div class="list-group-item"><strong>End Date:</strong> {{ course.endDate }}</div>
                 <div class="list-group-item"><strong>Number of Students Enrolled:</strong> {{ course.numOfStudents }}</div>
                 <div class="list-group-item"><strong>Number of TAs:</strong> {{ course.numOfTAs }}</div>
+                <div class="list-group-item"><strong>Share Code:</strong> {{ course.enrollmentPassword }}</div>
             </div>
         </div>
 
@@ -59,7 +60,10 @@
         </ul>
         {% if user.role == 3 %}
         <a href="/add-ta/{{ course.id }}" class="btn btn-primary mt-3">Add TA</a>
-        <div>Share Code: {{course.enrollmentPassword}}</div>
+        <!-- <h4>
+            Students will join this course by entering the Course Code and this code:
+        </h4>
+        <div>Share Code: {{course.enrollmentPassword}}</div> -->
         {% endif %}
     </div>
     {% endif %}
