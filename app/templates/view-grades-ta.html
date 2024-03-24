@@ -27,6 +27,7 @@
     <div class="card my-2">
       <div class="card-body">
         <h5 class="card-title">{{ result.testCaseName }} - {{ result.testCaseType }}</h5>
+        <h6 class="card-subtitle mb-2 text-muted">Score: {{ result.score }} / {{ result.maxScore }}</h6>
         <div class="form-row">
           <div class="form-group col-md-6">
             <label for="adjust_score_{{result.id}}">Adjust Score:</label>
@@ -50,7 +51,7 @@
       {% endif %}
         </div>
         {% if result.notes %}
-        <p><strong>Notes:</strong> {{ result.notes }}</p>
+        <p><strong>Notes:</strong> <pre>{{ result.notes }}</pre></p>
         {% endif %}
         <!-- Output comparison or File name specific output could go here -->
       </div>
