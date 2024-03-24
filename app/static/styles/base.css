@@ -128,7 +128,7 @@ ul {
 }
 
 .card-text {
-    font-size: 0.9rem;
+    font-size: 1rem;
 }
 .container {
     margin: auto; /* Center the container */
@@ -141,7 +141,7 @@ ul {
   }
   
   .card {
-    background-color:lightgrey; /* White background for cards */
+    background-color:#6f42c1; /* White background for cards */
     border: none; /* Remove borders */
     border-radius: 10px; /* Rounded corners for the cards */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
@@ -157,9 +157,10 @@ ul {
   }
   
   .card-title {
+    font-size: 1.3rem;
     margin: 0;
     font-weight: bold;
-    color: #343A40; /* Dark text for readability */
+    color: white; /* Dark text for readability */
   }
   
   .card-subtitle {
