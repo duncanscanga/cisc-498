@@ -152,22 +152,21 @@ def find_assignments(user):
 
 
 def addSubmissionLog(filename_with_user_id, user, assignment_id):
-    print("inside submission log")
     pastSubmissions = Submission.query.filter(and_( Submission.userId == user.id, Submission.assignmentId == assignment_id)).all()
-    print("1")
+
     for pastSubmission in pastSubmissions:
         #overwrite each past submission to only store the latest
         pastSubmission.overwritten = True
-    print("2")
+
     submission = Submission(assignmentId = assignment_id, userId=user.id, fileName=filename_with_user_id, submissionDate=func.now(), overwritten=False, taOverallComments="")
-    print("3")
+
     db.session.add(submission)
-    print("4")
+
     db.session.commit()
     db.session.flush() 
-    print("5")
+
     latePenalty = getLatePenalty(submission)
-    print("6")
+
     submission.manualLateMarks = latePenalty
     db.session.commit()
 
@@ -318,17 +317,17 @@ def execute_python_function(file_path, function_path, *args, **kwargs):
 def grade_submission(file_path, assignment_id, submission):
 
     # Fetch all test cases for the assignment
-    print("insidei 1")
+
     test_cases = TestCase.query.filter_by(assignmentId=assignment_id).all()
-    print("insidei 2")
-    print(test_cases)
+
+
 
     for test_case in test_cases:
 
         if test_case.type == 'Compilation':
-            print("clean compile")
+
             result = testCleanCompile(file_path)
-            print("clean compile")
+ 
   
             if result:
 
@@ -337,17 +336,17 @@ def grade_submission(file_path, assignment_id, submission):
             else:
                 notes = "Did not Compile"
                 score = 0
-            print("logging1")
+
             logGradingResult(score, notes, test_case.id, submission,"", 0, "")
-            print("logging1")
+  
 
         elif test_case.type == 'Output Comparison':
-            print("output")
+
             result = testCleanCompile(file_path)
             
             if result:
                 result, notes, diff_index, output, expected = grade_submission_with_input(file_path, test_case.input, test_case.expected_output)
-                print("clean output")
+
                 if result == 100:
                     score = test_case.maxScore
                 else:
@@ -359,17 +358,15 @@ def grade_submission(file_path, assignment_id, submission):
                 diff_index = -1
                 expected = ""
             
-            print("logging2")
+
             logGradingResult(score, notes, test_case.id, submission, output, diff_index, expected)
-            print("logging2")
+
         elif test_case.type == 'Code Check':
-            print("code check")
+
             notes = checkCode(file_path, "")
-            print("code check")
             score = test_case.maxScore
-            print("logging3")
+
             logGradingResult(score, notes, test_case.id, submission, "", 0, "")
-            print("logging3")
         elif test_case.type == 'Python Function':
             # Assume test_case.additional_info contains the function_path and args are stored appropriately
             # Example: test_case.additional_info = "path.to.function"
@@ -383,33 +380,31 @@ def grade_submission(file_path, assignment_id, submission):
                 notes = f"Error executing Python function: {e}"
                 score = 0  # or a partial score based on the nature of the error
 
-            print("logging4")
             logGradingResult(score, notes, test_case.id, submission, "", 0, "")
-            print("logging4")
         elif test_case.type == 'File Name':
             equal = test_case.fileName == submission.fileName
-            print(test_case.fileName)
+
             if equal:
                 score = test_case.maxScore
                 notes = "Correct File Name"
             else:
                 score = 0
                 notes = "Incorrect File Name"
-            print("logging5")
+
             logGradingResult(score, notes, test_case.id, submission, submission.fileName, 0, test_case.fileName)
-            print("logging5")
+
         elif test_case.type == 'Variable Name':
             equal = checkIfVariableInCode(file_path, test_case.variable)
-            print(test_case.fileName)
+
             if equal:
                 score = test_case.maxScore
                 notes = "Variable used."
             else:
                 score = 0
                 notes = "Variable not found"
-            print("logging6")
+
             logGradingResult(score, notes, test_case.id, submission, "", 0, test_case.variable)
-            print("logging6")
+
 
 def normalize_whitespace(text):
     """Normalize the whitespace in the text by replacing sequences of whitespace
@@ -449,8 +444,6 @@ def grade_submission_with_input(c_file_path, inputs, expected_output):
     normalized_actual_output = normalize_whitespace(actual_output)
     normalized_expected_output = normalize_whitespace(expected_output)
 
-    print(normalized_actual_output)
-    print(normalized_expected_output)
 
     diff_index = find_first_difference_index(normalized_actual_output, normalized_expected_output)
     

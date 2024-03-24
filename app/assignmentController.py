@@ -127,15 +127,11 @@ def get_create_assignment(user, courseId):
 @app.route('/submit-assignment/<int:assignment_id>', methods=['POST'])
 @authenticate
 def submit_assignment(user, assignment_id):
-    print("got here")
     # Check if the post request has the file part
     if 'assignment_file' not in request.files:
-        print("1")
         flash('No file part')
         return redirect(request.url)
     file = request.files['assignment_file']
-
-    print("2")
     
     # If the user does not select a file, the browser submits an
     # empty file without a filename.
@@ -143,50 +139,47 @@ def submit_assignment(user, assignment_id):
         flash('No selected file')
         return redirect(request.url)
 
-
-    print("3")
     if not file.filename.endswith(".c"):
         flash('Not a \'C\' file')
         return redirect(request.url)
 
-    print("4")
     if file:
-        print("1")
+
         original_filename = secure_filename(file.filename)
         # Define the path for the assignment folder
-        print("2")
+
         assignment_folder = os.path.join(app.config['UPLOAD_FOLDER'], f'assignment-{assignment_id}')
         # Define the path for the user's folder within the assignment folder
         user_folder = os.path.join(assignment_folder, f'user-{user.id}')
-        print("3")
+ 
         # Check if the user's folder exists within the assignment folder, create it if it doesn't
         if not os.path.exists(user_folder):
             os.makedirs(user_folder)
 
-        print("4")
+
 
         # Append user ID to the filename before its extension to ensure uniqueness
         filename, file_extension = os.path.splitext(original_filename)
         # unique_filename = f"{filename}_{user.id}{file_extension}"
         unique_filename = f"{filename}{file_extension}"
 
-        print("5")
+
         
         # Save the file in the user's folder within the assignment folder with the unique filename
         file_path = os.path.join(user_folder, unique_filename)
         file.save(file_path)
 
-        print("6")
+
         
         # Redirect or respond as necessary after file upload
         flash('File successfully uploaded')
         # Log the submission with the unique filename and path
-        print("7")
+
         submission = addSubmissionLog(unique_filename, user, assignment_id)
-        print("8")
+
         # After saving the file, call the auto-grading function
         grade_submission(file_path, assignment_id, submission )
-        print("9")
+
         
         return redirect(f'/assignments/{assignment_id}')
     
@@ -439,13 +432,12 @@ def delete_testcase2(user, assignment_id, testcase_id):
 @app.route('/view-grade/<int:assignment_id>/<int:submission_id>')
 @authenticate
 def view_grade(user, assignment_id, submission_id):
-    print("inside view gradesd")
+
     if user.role not in [2, 3]:
         submission = Submission.query.filter_by(id=submission_id, assignmentId=assignment_id).first()
         if submission.userId != user.id:
             return make_response('Access denied', 403)
-        
-    print("11")
+
 
     submission = Submission.query.filter_by(id=submission_id, assignmentId=assignment_id).first()
     submissionResults = getSubmissionResults(submission_id, submission, user)
@@ -453,19 +445,17 @@ def view_grade(user, assignment_id, submission_id):
     student = findUserById(submission.userId)
     latePenalty = getLatePenalty(submission)
 
-    print("12")
 
-    print(submissionResults)
 
     # Fetch TestCase details for each SubmissionResult
     for result in submissionResults:
-        print("9")
+
         testCase = TestCase.query.filter_by(id=result.testCaseId).first()
         result.testCaseName = testCase.name if testCase else "Unknown"
         result.testCaseType = testCase.type if testCase else "Unknown"
-        print("8")
+
         if result.type == "Output Comparison" and result.errorIndex > 0:
-            print("7")
+
             # Slice the outputs to highlight divergence in the template
             result.preErrorOutput = result.codeOutput[:result.errorIndex]
             result.errorChar = result.codeOutput[result.errorIndex]
@@ -474,10 +464,10 @@ def view_grade(user, assignment_id, submission_id):
             result.expectedPreError = result.expectedOutput[:result.errorIndex]
             result.expectedErrorChar = result.expectedOutput[result.errorIndex]
             result.expectedPostError = result.expectedOutput[result.errorIndex + 1:]
-            print("7")
+
         else:
             # Ensure these attributes exist even if not used, to avoid template errors
-            print("6")
+
             result.preErrorOutput = result.codeOutput
             result.errorChar = ''
             result.postErrorOutput = ''
@@ -485,10 +475,10 @@ def view_grade(user, assignment_id, submission_id):
             result.expectedPreError = result.expectedOutput
             result.expectedErrorChar = ''
             result.expectedPostError = ''
-            print("6")
-    print("outside")
+
+
     grade_info = getStudentGrade(assignment_id, submission.userId)
-    print("13")
+
     if grade_info:
         student_id = grade_info['student_id']
         total_score = grade_info['score']
@@ -498,7 +488,7 @@ def view_grade(user, assignment_id, submission_id):
         total_score = 0
         total_possible_score = 0
 
-    print("loading page")
+
 
     if user.role in [2, 3]:
         return render_template('view-grades-ta.html', assignment=assignment, score=total_score, totalScore=total_possible_score, latePenalty=latePenalty, user=user, submission=submission, student=student, submissionResults=submissionResults)
