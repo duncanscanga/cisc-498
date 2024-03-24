@@ -19,3 +19,8 @@ docker pull dscanga/cisc498:v1
 
 To Run:
 docker run -p 8081:8081 dscanga/cisc498:v1 python3 -m app
+
+
+TO DO:
+# create FE ability for 'Python Function'
+# store file somewhere

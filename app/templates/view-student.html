@@ -1,18 +1,21 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1>{% block title %}AutoGrader Result{% endblock %}</h1>
+<h1 class="page-title">{% block title %}AutoGrader Result{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="../static/styles/base.css" />
 
 <div class="container my-3">
-  <h1>AutoGrader Results For: {{ student.username }} ({{ student.student_number }}) - {{ student.email }}</h1>
-  <h2>{{course.name}} ({{course.courseCode}})</h2>
-  
+  <div class="results-header">
+    <h1>{{course.name}} ({{course.courseCode}})</h1>
+    <h2>{{ student.username }} ({{ student.student_number }}) - {{ student.email }}</h2>
+    
+  </div>
+
   <div id="submissions">
-    <h2>Latest Submission:</h2>
+    <!-- <h2>Latest Submission(s):</h2> -->
     <div class="row">
       {% for submission in submissions %}
       <div class="col-md-4">
@@ -21,8 +24,9 @@
             <h4 class="card-title">{{ submission.assignmentName }}</h4>
             <h5 class="card-title">{{ submission.fileName }}</h5>
             <h6 class="card-subtitle mb-2 text-muted">Submitted on: {{ submission.submissionDate }}</h6>
-            <a href="/view-grade/{{submission.assignmentId}}/{{submission.id}}" class="card-link">View Grade</a>
-            <a href="/download-submission/{{submission.assignmentId}}/{{submission.id}}" class="card-link">Download</a>
+            
+            <h6 class="card-title"><a href="/view-grade/{{submission.assignmentId}}/{{submission.id}}" class="card-link">View Grade</a></h6>
+            <h6 class="card-title"><a href="/download-submission/{{submission.assignmentId}}/{{submission.id}}" class="card-link">Download</a></h6>
           </div>
         </div>
       </div>

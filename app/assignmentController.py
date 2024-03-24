@@ -127,11 +127,15 @@ def get_create_assignment(user, courseId):
 @app.route('/submit-assignment/<int:assignment_id>', methods=['POST'])
 @authenticate
 def submit_assignment(user, assignment_id):
+    print("got here")
     # Check if the post request has the file part
     if 'assignment_file' not in request.files:
+        print("1")
         flash('No file part')
         return redirect(request.url)
     file = request.files['assignment_file']
+
+    print("2")
     
     # If the user does not select a file, the browser submits an
     # empty file without a filename.
@@ -139,37 +143,50 @@ def submit_assignment(user, assignment_id):
         flash('No selected file')
         return redirect(request.url)
 
+
+    print("3")
     if not file.filename.endswith(".c"):
         flash('Not a \'C\' file')
         return redirect(request.url)
 
-
+    print("4")
     if file:
+        print("1")
         original_filename = secure_filename(file.filename)
         # Define the path for the assignment folder
+        print("2")
         assignment_folder = os.path.join(app.config['UPLOAD_FOLDER'], f'assignment-{assignment_id}')
         # Define the path for the user's folder within the assignment folder
         user_folder = os.path.join(assignment_folder, f'user-{user.id}')
-
+        print("3")
         # Check if the user's folder exists within the assignment folder, create it if it doesn't
         if not os.path.exists(user_folder):
             os.makedirs(user_folder)
+
+        print("4")
 
         # Append user ID to the filename before its extension to ensure uniqueness
         filename, file_extension = os.path.splitext(original_filename)
         # unique_filename = f"{filename}_{user.id}{file_extension}"
         unique_filename = f"{filename}{file_extension}"
+
+        print("5")
         
         # Save the file in the user's folder within the assignment folder with the unique filename
         file_path = os.path.join(user_folder, unique_filename)
         file.save(file_path)
+
+        print("6")
         
         # Redirect or respond as necessary after file upload
         flash('File successfully uploaded')
         # Log the submission with the unique filename and path
+        print("7")
         submission = addSubmissionLog(unique_filename, user, assignment_id)
+        print("8")
         # After saving the file, call the auto-grading function
         grade_submission(file_path, assignment_id, submission )
+        print("9")
         
         return redirect(f'/assignments/{assignment_id}')
     

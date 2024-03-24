@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1>{% block title %}User Details{% endblock %}</h1>
+<h1 class="page-title">{% block title %}User Details{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
@@ -10,41 +10,48 @@
 <div class="container">
 
   {% if user is defined and student.role == 2 %}
-  <div class="container">
-    <h1>TA Assignment for: {{ course.name }} ({{ course.courseCode }})</h1>
-    <h2>TA Assignment for: {{ student.username }} ({{ student.email }})</h2>
-
-
-    {% if user.role == 3 %}
-    <h2>Assigned Students:</h2>
-    {% if assignedStudents %}
-    <ul>
-      {% for assignedStudent in assignedStudents %}
-      <li>
-        {{ assignedStudent.username }} ({{ assignedStudent.student_number }})
-        <!-- Ensure you have a route and method to handle removal -->
-        <form action="{{ url_for('remove_student_from_ta', course_id=course.id, ta_id=student.id, student_id=assignedStudent.id) }}" method="POST" style="display:inline;">
-          <button type="submit" class="btn">Remove</button>
-        </form>
-      </li>
-      {% endfor %}
-    </ul>
-    {% else %}
-    <p>No students have been assigned to this TA.</p>
-    {% endif %}
-
-    <h2>Assign Students to TA:</h2>
-    <form action="{{ url_for('assign_students_to_ta', course_id=course.id, ta_id=student.id) }}" method="POST">
-      {% for unassignedStudent in students %}
-      <div>
-        <input type="checkbox" name="student_ids" value="{{ unassignedStudent.id }}">
-        {{ unassignedStudent.username }} ({{ unassignedStudent.student_number }})
+    <div class="card">
+      <div class="card-header">
+        <h1 class="taTitle"> {{ course.name }} ({{ course.courseCode }})</h1>
+        <h2 class="taTitle">TA Assignment for: {{ student.username }} ({{ student.email }})</h2>
       </div>
-      {% endfor %}
-      <button type="submit" class="btn">Assign Selected Students</button>
-    </form>
-    {% endif %}
-  </div>
+
+      {% if user.role == 3 %}
+        <div class="card-body">
+          <h2 class="taTitle">Assigned Students:</h2>
+          {% if assignedStudents %}
+            <div class="student-list">
+              {% for assignedStudent in assignedStudents %}
+                <div class="student-card">
+                  <span class="taTitle">{{ assignedStudent.username }} ({{ assignedStudent.student_number }})</span>
+                  <!-- Ensure you have a route and method to handle removal -->
+                  <form action="{{ url_for('remove_student_from_ta', course_id=course.id, ta_id=student.id, student_id=assignedStudent.id) }}" method="POST" class="remove-student-form">
+                    <button type="submit" class="btn-remove">Remove</button>
+                  </form>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="taTitle">No students have been assigned to this TA.</p>
+          {% endif %}
+
+          <h2 class="taTitle">Assign Students to TA:</h2>
+          <form action="{{ url_for('assign_students_to_ta', course_id=course.id, ta_id=student.id) }}" method="POST" class="assign-students-form">
+            {% if students %}
+            {% for unassignedStudent in students %}
+              <div class="assign-student-checkbox">
+                <input type="checkbox" name="student_ids" value="{{ unassignedStudent.id }}">
+                <label class="taTitle">{{ unassignedStudent.username }} ({{ unassignedStudent.student_number }})</label>
+              </div>
+            {% endfor %}
+            <button type="submit" class="btn-assign">Assign Selected Students</button>
+            {% else %}
+            <p class="taTitle">All Students are Assigned to a TA.</p>
+            {% endif %}
+          </form>
+        </div>
+      {% endif %}
+    </div>
   {% endif %}
 </div>
 {% endblock %}

@@ -130,3 +130,121 @@ ul {
 .card-text {
     font-size: 0.9rem;
 }
+.container {
+    margin: auto; /* Center the container */
+
+  }
+  
+  .results-header h1, .results-header h2 {
+    color: #343A40; /* Ensure text is easily readable */
+    margin-bottom: 20px; /* Add some spacing */
+  }
+  
+  .card {
+    background-color:lightgrey; /* White background for cards */
+    border: none; /* Remove borders */
+    border-radius: 10px; /* Rounded corners for the cards */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    transition: transform 0.2s; /* Smooth transformation on hover */
+  }
+  
+  .card:hover {
+    transform: scale(1.03); /* Slightly increase size on hover for interaction feedback */
+  }
+  
+  .card-body {
+    padding: 20px;
+  }
+  
+  .card-title {
+    margin: 0;
+    font-weight: bold;
+    color: #343A40; /* Dark text for readability */
+  }
+  
+  .card-subtitle {
+    color: #6c757d; /* Subdued color for subtitles */
+    margin-bottom: 20px;
+  }
+  
+  .card-link {
+    color: #007bff; /* Bootstrap primary color */
+    text-decoration: none; /* No underlines */
+    margin-right: 15px; /* Space out links */
+  }
+  
+  .card-link:hover {
+    text-decoration: underline; /* Underline on hover for interaction feedback */
+  }
+  .taTitle{
+    color: black !important;
+  }
+  
+  .student-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .student-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+  }
+  
+  .remove-student-form, .assign-students-form {
+    margin-top: 20px;
+  }
+  
+  .btn-remove, .btn-assign {
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+  }
+  
+  .assign-student-checkbox {
+    display: flex;
+    align-items: center;
+  }
+  
+  .assign-student-checkbox label {
+    margin-left: 8px;
+  }
+  
+
+  /* Custom styles for file input */
+.form-control-file {
+    background-color: #e9ecef; /* A light gray background to stand out from the white */
+    border: 1px solid #ced4da; /* A solid border for definition */
+    border-radius: 0.25rem; /* Match the border-radius of other inputs */
+    padding: 0.375rem 0.75rem; /* Padding to match other form controls */
+}
+
+.form-control-file:hover {
+    background-color: #dde2e6; /* Slightly darker on hover to indicate interactivity */
+}
+
+/* Enhance visibility of the text inside the file input */
+.form-control-file::file-selector-button {
+    background-color: #6f42c1 !important; /* Matching the purplish navbar */
+    color: white !important; /* White text for contrast */
+    padding: 0.375rem 0.75rem; /* Padding for aesthetic spacing */
+    border-radius: 0.25rem; /* Rounded edges for the button */
+    border: none; /* Remove default border */
+    margin-right: 0.375rem; /* Space between the button and the filename text */
+}
+
+.form-control-file::file-selector-button:hover {
+    background-color: #5e379d !important; /* A slightly darker shade for hover state */
+}
+
+#file-chosen {
+    margin-left: 10px;
+    color: #343A40; /* Match your form's text color */
+}

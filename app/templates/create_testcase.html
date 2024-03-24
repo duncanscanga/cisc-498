@@ -56,6 +56,7 @@ function toggleFields() {
     document.getElementById("expected_output_group").style.display = type === "Output Comparison" ? "block" : "none";
     document.getElementById("file_name_group").style.display = type === "File Name" ? "block" : "none";
     document.getElementById("variable_name_group").style.display = type === "Variable Name" ? "block" : "none";
+    document.getElementById("python_function_group").style.display = type === "Python Function" ? "block" : "none";
     // document.getElementById("code_check_group").style.display = type === "Code Check" ? "block" : "none";
 }
 window.onload = toggleFields;

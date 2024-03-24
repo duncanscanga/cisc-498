@@ -1,104 +1,81 @@
 {% extends 'base.html' %}
-<link rel="stylesheet" href="../static/styles/base.css" />
-
 {% block header %}
-<h1>{% block title %}Course Details - {{ course.name }}{% endblock %}</h1>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
 {% endblock %}
 
+{% block title %}Course Details - {{ course.name }}{% endblock %}
+
 {% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Course Details: {{ course.name }}</h1>
 
-<div id="course-details" class="container">
-    <h2>Course Details:</h2>
+    <div class="row">
+        <div class="col-md-6">
+            <h3>Details</h3>
+            <div class="list-group">
+                <div class="list-group-item"><strong>Name:</strong> {{ course.name }}</div>
+                <div class="list-group-item"><strong>Course Code:</strong> {{ course.courseCode }}</div>
+                <div class="list-group-item"><strong>Year:</strong> {{ course.year }}</div>
+                <div class="list-group-item"><strong>Semester:</strong> {{ course.semester }}</div>
+                <div class="list-group-item"><strong>Start Date:</strong> {{ course.startDate  }}</div>
+                <div class="list-group-item"><strong>End Date:</strong> {{ course.endDate }}</div>
+                <div class="list-group-item"><strong>Number of Students Enrolled:</strong> {{ course.numOfStudents }}</div>
+                <div class="list-group-item"><strong>Number of TAs:</strong> {{ course.numOfTAs }}</div>
+            </div>
+        </div>
 
-    <div class="detail-item">
-        <strong>Name:</strong> {{ course.name }}
-    </div>
-    <div class="detail-item">
-        <strong>Course Code:</strong> {{ course.courseCode }}
-    </div>
-    <div class="detail-item">
-        <strong>Year:</strong> {{ course.year }}
-    </div>
-    <div class="detail-item">
-        <strong>Semester:</strong> {{ course.semester }}
-    </div>
-    <div class="detail-item">
-        <strong>Start Date:</strong> {{ course.startDate}}
-    </div>
-    <div class="detail-item">
-        <strong>End Date:</strong> {{ course.endDate }}
-    </div>
-    <div class="detail-item">
-        <strong>Number of Students Enrolled:</strong> {{ course.numOfStudents }}
-    </div>
-    <div class="detail-item">
-        <strong>Number of TAs:</strong> {{ course.numOfTAs }}
-    </div>
-    <!-- You can add more details as needed -->
-</div>
-
-<div id="assignments" class="container">
-    <h2>Assignments:</h2>
-    {% for assignment in assignments %}
-    <ul>
-        <li>
-            <a href="/assignments/{{ assignment.id }}">{{ assignment.name }}</a>
-        </li>
-    </ul>
-    {% endfor %}
-
-    {% if user is defined and user.role == 3 %}
-    <a href="/create-assignment/{{ course.id }}" class="btn">Add Assignment</a>
-    {% endif %}
-</div>
-
-{% if user is defined and (user.role == 3)%}
-<div id="users" class="container">
-    <h2>Users:</h2>
-    {% for u in users %}
-    <ul>
-        {% if u is defined and u.role == 1 %}
-        <li>
-            
-            <a href="/view-student/{{ u.id }}/{{course.id}}">{{ u.username }}</a> ({{ u.student_number }}) 
-            
-
-        </li>
-            
+        <div class="col-md-6">
+            <h3>Assignments</h3>
+            <ul class="list-group">
+                {% for assignment in assignments %}
+                <li class="list-group-item">
+                    <a href="/assignments/{{ assignment.id }}">{{ assignment.name }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% if user is defined and user.role == 3 %}
+            <a href="/create-assignment/{{ course.id }}" class="btn btn-primary mt-3">Add Assignment</a>
             {% endif %}
-            {% if u is defined and u.role == 2 %}
-            <li>
-            
+        </div>
+    </div>
 
-            <a href="/users/{{ u.id }}/{{course.id}}">{{ u.username }}</a> (TA) 
-
+    {% if user is defined %}
+    {% if user is defined and (user.role == 3)%}
+    <div class="mt-5">
+        <h3>Participants</h3>
+        <ul class="list-group">
+            {% for u in users %}
+            {% if u.role == 2 or u.role ==1 %}
+            <li class="list-group-item">
+                {% if u.role == 2 %}
+                <a href="/users/{{ u.id }}/{{course.id}}">{{ u.username }}</a> (TA) 
+                {% endif %}
+                {% if u.role == 1 %}
+                <a href="/view-student/{{ u.id }}/{{course.id}}">{{ u.username }}</a> ({{ u.student_number }})
+                {% endif %}
             </li>
             {% endif %}
-        
-    </ul>
-    {% endfor %}
-    {% if user is defined and user.role == 3 %}
-    <a href="/add-ta/{{ course.id }}" class="btn">Add TA</a>
-    Share Code: {{course.enrollmentPassword}}
+            {% endfor %}
+        </ul>
+        {% if user.role == 3 %}
+        <a href="/add-ta/{{ course.id }}" class="btn btn-primary mt-3">Add TA</a>
+        <div>Share Code: {{course.enrollmentPassword}}</div>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% if user is defined and (user.role == 2)%}
+    <div class="mt-5">
+        <h3>Students Assigned To You</h3>
+        <ul class="list-group">
+            {% for u in students %}
+            <li class="list-group-item">
+                
+                <a href="/view-student/{{ u.id }}/{{course.id}}">{{ u.username }}</a> ({{ u.student_number }})
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
     {% endif %}
 </div>
-{% endif %}
-
-
-
-{% if user is defined and (user.role == 2)%}
-<div id="users" class="container">
-    <h2>Students Assigned To You:</h2>
-    {% for u in students %}
-    <ul>
-        <li>
-            <a href="/view-student/{{ u.id }}/{{course.id}}">{{ u.username }}</a> ({{ u.student_number }}) 
-        </li>
-    </ul>
-    {% endfor %}
-</div>
-{% endif %}
-
-
-
 {% endblock %}

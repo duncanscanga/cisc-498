@@ -9,6 +9,8 @@ from datetime import datetime, timedelta
 from secrets import token_urlsafe
 import subprocess
 import os
+import sys
+import importlib.util
 import re
 import mosspy
 from nostril import nonsense
@@ -280,18 +282,47 @@ def submit_to_moss(submission_directory, assignmentId):
 
     return url
 
+def execute_python_function(file_path, function_path, *args, **kwargs):
+    """
+    Dynamically loads a Python function from a file and executes it.
+    
+    :param file_path: Path to the .py file containing the function.
+    :param function_path: Dot-separated path to the function within the file.
+    :param args: Positional arguments to pass to the function.
+    :param kwargs: Keyword arguments to pass to the function.
+    :return: The result of the function execution.
+    """
+    # Ensure the file path is secure and restricted to a safe directory
+    if not file_path.startswith('/path/to/safe/directory'):
+        raise ValueError("Insecure file path")
+
+    spec = importlib.util.spec_from_file_location("module.name", file_path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["module.name"] = module
+    spec.loader.exec_module(module)
+    
+    # Navigate to the function based on function_path
+    function = module
+    for part in function_path.split('.'):
+        function = getattr(function, part)
+    
+    return function(*args, **kwargs)
+
 
 def grade_submission(file_path, assignment_id, submission):
 
     # Fetch all test cases for the assignment
+    print("insidei 1")
     test_cases = TestCase.query.filter_by(assignmentId=assignment_id).all()
-
+    print("insidei 2")
+    print(test_cases)
 
     for test_case in test_cases:
 
         if test_case.type == 'Compilation':
-
+            print("clean compile")
             result = testCleanCompile(file_path)
+            print("clean compile")
   
             if result:
 
@@ -300,13 +331,17 @@ def grade_submission(file_path, assignment_id, submission):
             else:
                 notes = "Did not Compile"
                 score = 0
-
+            print("logging1")
             logGradingResult(score, notes, test_case.id, submission,"", 0, "")
+            print("logging1")
 
         elif test_case.type == 'Output Comparison':
+            print("output")
             result = testCleanCompile(file_path)
+            
             if result:
                 result, notes, diff_index, output, expected = grade_submission_with_input(file_path, test_case.input, test_case.expected_output)
+                print("clean output")
                 if result == 100:
                     score = test_case.maxScore
                 else:
@@ -317,12 +352,34 @@ def grade_submission(file_path, assignment_id, submission):
                 output = ""
                 diff_index = -1
                 expected = ""
-            print("logging")
+            
+            print("logging2")
             logGradingResult(score, notes, test_case.id, submission, output, diff_index, expected)
+            print("logging2")
         elif test_case.type == 'Code Check':
-            notes = checkCode(file_path, test_case.codeCheckAdditional)
+            print("code check")
+            notes = checkCode(file_path, "")
+            print("code check")
             score = test_case.maxScore
+            print("logging3")
             logGradingResult(score, notes, test_case.id, submission, "", 0, "")
+            print("logging3")
+        elif test_case.type == 'Python Function':
+            # Assume test_case.additional_info contains the function_path and args are stored appropriately
+            # Example: test_case.additional_info = "path.to.function"
+            try:
+                # Assuming a safe directory where user-uploaded .py files are stored
+                python_file_path = os.path.join('/safe/directory', test_case.fileName)
+                result = execute_python_function(python_file_path, test_case.additional_info)
+                notes = "Python function executed successfully."
+                score = test_case.maxScore  # or derive score from result
+            except Exception as e:
+                notes = f"Error executing Python function: {e}"
+                score = 0  # or a partial score based on the nature of the error
+
+            print("logging4")
+            logGradingResult(score, notes, test_case.id, submission, "", 0, "")
+            print("logging4")
         elif test_case.type == 'File Name':
             equal = test_case.fileName == submission.fileName
             print(test_case.fileName)
@@ -332,7 +389,9 @@ def grade_submission(file_path, assignment_id, submission):
             else:
                 score = 0
                 notes = "Incorrect File Name"
+            print("logging5")
             logGradingResult(score, notes, test_case.id, submission, submission.fileName, 0, test_case.fileName)
+            print("logging5")
         elif test_case.type == 'Variable Name':
             equal = checkIfVariableInCode(file_path, test_case.variable)
             print(test_case.fileName)
@@ -342,7 +401,9 @@ def grade_submission(file_path, assignment_id, submission):
             else:
                 score = 0
                 notes = "Variable not found"
+            print("logging6")
             logGradingResult(score, notes, test_case.id, submission, "", 0, test_case.variable)
+            print("logging6")
 
 def normalize_whitespace(text):
     """Normalize the whitespace in the text by replacing sequences of whitespace

@@ -2,67 +2,47 @@
 <link rel="stylesheet" href="../static/styles/base.css" />
 
 {% block header %}
-<h1>{% block title %}Assignment Details - {{ assignment.name }}{% endblock %}</h1>
+<h1 class="page-title">{% block title %}Assignment Details - {{ assignment.name }}{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
+<div class="container my-5">
+    <div class="assignment-details-header mb-4">
+        <h2 class="mb-3">Assignment Details:</h2>
+        <div class="card detail-card mb-2">
+            <div class="card-body">
+                <p><strong>Name:</strong> {{ assignment.name }}</p>
+                <p><strong>Start Date:</strong> {{ assignment.startDate }}</p>
+                <p><strong>End Date:</strong> {{ assignment.endDate }}</p>
+                <p><strong>Late Penalty:</strong> {{ assignment.dailyLatePenalty }} marks per day</p>
+                <p><strong>Grades Published?:</strong> {{ "Yes" if assignment.isPublic else "No" }}</p>
+                {% if isOwner %}
+                <p><strong>Number of Submissions:</strong> {{ numOfSubmission }} / {{ course.numOfStudents }}</p>
+                {% endif %}
+            </div>
+        </div>
 
-<div id="assignment-details" class="container">
-    <h2>Assignment Details:</h2>
-
-    <div class="detail-item">
-        <strong>Name:</strong> {{ assignment.name }}
+        {% if isOwner or isTa %}
+        <div class="actions mb-3">
+            <a href="{{ url_for('download_grades', assignment_id=assignment.id) }}" class="btn btn-primary">Download Grades</a>
+            {% if isOwner %}
+            <a href="/edit-assignment/{{ assignment.id }}" class="btn btn-secondary">Edit Assignment Details</a>
+            <a href="{{ url_for('confirm_assignment', assignment_id=assignment.id) }}" class="btn btn-warning">Check Submissions for Plagiarism</a>
+            {% endif %}
+            {% if assignment.mossUrl %}
+            <a href="{{ assignment.mossUrl }}" target="_blank" class="btn btn-info">View Last Moss Report</a>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
-    <div class="detail-item">
-        <strong>Start Date:</strong> {{ assignment.startDate }}
-    </div>
-    <div class="detail-item">
-        <strong>End Date:</strong> {{ assignment.endDate }}
-    </div>
-    <div class="detail-item">
-        <strong>Late Penalty</strong> {{ assignment.dailyLatePenalty}} marks per day
-    </div>
-    <div class="detail-item">
-        <strong>Grades Published?</strong> {{ assignment.isPublic}}
-    </div>
-    {% if isOwner %}
-    <div class="detail-item">
-        <strong>Number of Submissions</strong> {{ numOfSubmission}} / {{course.numOfStudents}}
-    </div>
-    {% endif %}
-    {% if isOwner %}
-    <a href="{{ url_for('download_grades', assignment_id=assignment.id) }}" class="btn">Download Grades</a>
-    {% endif %}
-
-    {% if isTa %}
-    <a href="{{ url_for('download_grades', assignment_id=assignment.id) }}" class="btn">Download Grades</a>
-    {% endif %}
 
     {% if isOwner %}
-    <a href="/edit-assignment/{{ assignment.id }}" class="btn">Edit Assignment Details</a>
-    <!-- Plagiarism Check Button for Owners -->
-    <a href="{{ url_for('confirm_assignment', assignment_id=assignment.id) }}" class="btn">Check Submissions for
-        Plagiarism</a>
-    {% if assignment.mossUrl %}
-    <a href="{{assignment.mossUrl}}" target="_blank" class="btn">View Last Moss Report</a>
-    {% endif %}
-    {% endif %}
-
-    {% if isTa %}
-    <a href="{{ url_for('confirm_assignment', assignment_id=assignment.id) }}" class="btn">Check Submissions for
-        Plagiarism</a>
-    {% if assignment.mossUrl %}
-    <a href="{{assignment.mossUrl}}" target="_blank" class="btn">View Last Moss Report</a>
-    {% endif %}
-    {% endif %}
-
-    {% if isOwner %}
-    <div id="test-cases">
+    <div id="test-cases" class="mb-5">
         <h2>Test Cases:</h2>
         <div class="row">
             {% for test_case in testCases %}
-            <div class="col-12">
-                <div class="card">
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100">
                     <div class="card-header">
                         {{ test_case.name }} - {{ test_case.type }}
                     </div>
@@ -71,16 +51,16 @@
                         {% if test_case.type == 'Code Check' %}
                         <p>Checks for comments, variables, etc.</p>
                         {% elif test_case.type == 'File Name' %}
-                        <p>Expected File Name: {{ test_case.fileName }}</p>
+                        <p><strong>Expected File Name:</strong> {{ test_case.fileName }}</p>
                         {% elif test_case.type == 'Variable Name' %}
-                        <p>Expected Variable: {{ test_case.variable }}</p>
+                        <p><strong>Expected Variable:</strong> {{ test_case.variable }}</p>
                         {% elif test_case.type == 'Compilation' %}
                         <p>Compiles without errors.</p>
                         {% elif test_case.type == 'Output Comparison' %}
-                        <p>Input: <pre>{{ test_case.input }}</pre></p>
-                        <p>Expected Output: <pre>{{ test_case.expected_output }}</pre></p>
+                        <p><strong>Input:</strong> <pre>{{ test_case.input }}</pre></p>
+                        <p><strong>Expected Output:</strong> <pre>{{ test_case.expected_output }}</pre></p>
                         {% endif %}
-                        <p>Points: {{ test_case.maxScore }}</p>
+                        <p><strong>Points:</strong> {{ test_case.maxScore }}</p>
                     </div>
                     <div class="card-footer text-muted">
                         <form action="{{ url_for('toggle_visibility', assignment_id=assignment.id, test_case_id=test_case.id) }}" method="post" style="display: inline;">
@@ -93,55 +73,57 @@
             </div>
             {% endfor %}
         </div>
-    
+        <div class="text-center mt-4">
+            <a href="/create-testcase/{{ assignment.id }}" class="btn btn-success">Create New Test Case</a>
+        </div>
+    </div>
+    {% endif %}
 
-    <!-- Create a New Test Case for This Assignment -->
-    <form action="/create-testcase/{{ assignment.id }}" method="get">
-        <button type="submit" class="btn">Create New Test Case</button>
-    </form>
-</div>
-{% endif %}
-<!-- Conditional Button based on isOwner -->
-{% if isOwner %}
-
-{% elif isTa %}
-
-{% else %}
-<div id="submissions" >
-    <h2>Latest Submission:</h2>
-    <div class="row">
-        {% for submission in submissions %}
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">{{ submission.fileName }}</h5>
-                    <p class="card-text">Submitted on: {{ submission.submissionDate }}</p>
-                    <a href="{{ url_for('view_grade', assignment_id=assignment.id, submission_id=submission.id) }}" class="btn btn-primary">View Grade</a>
-                    <a href="{{ url_for('download_submission', assignment_id=assignment.id, submission_id=submission.id) }}" class="btn btn-secondary">Download File</a>
+    <!-- Conditional Content for TA or Student View -->
+    {% if not isOwner and not isTa %}
+    <div id="submissions" class="mb-5">
+        <h2>Latest Submission:</h2>
+        <div class="row">
+            {% for submission in submissions %}
+            <div class="col-12 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ submission.fileName }}</h5>
+                        <p class="card-text">Submitted on: {{ submission.submissionDate }}</p>
+                        <a href="{{ url_for('view_grade', assignment_id=assignment.id, submission_id=submission.id) }}" class="btn btn-primary">View Grade</a>
+                        <a href="{{ url_for('download_submission', assignment_id=assignment.id, submission_id=submission.id) }}" class="btn btn-secondary">Download File</a>
+                    </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
     </div>
-</div>
+    <div class="mb-5">
+        <h3>Submit Assignment:</h3>
+        <div class="row">
+            <div class="col-12 mb-3">
+                <div class="card"><div class="card-body">
+                    <form action="/submit-assignment/{{ assignment.id }}" method="post" enctype="multipart/form-data">
+                        <input type="file" name="assignment_file" accept=".c, text/plain" required>
+        <button type="submit" class="btn">Submit Assignment</button>
+                    </form>
 
-<form action="/submit-assignment/{{ assignment.id }}" method="post" enctype="multipart/form-data">
-    <input type="file" name="assignment_file" accept=".c, text/plain" required>
-    <button type="submit" class="btn">Submit Assignment</button>
-</form>
-{% endif %}
+                </div></div>
+                
+            </div>
+        </div>
 
-<script>
-    function confirmDelete(testCaseId) {
-        if(confirm("Are you sure you want to delete this test case?")) {
-            window.location.href = "/delete-testcase/" + testCaseId;
+    </div>
+
+    
+    {% endif %}
+
+    <script>
+        function confirmDelete(testCaseId) {
+            if(confirm("Are you sure you want to delete this test case?")) {
+                window.location.href = "/delete-testcase/" + testCaseId;
+            }
         }
-    }
     </script>
-
-
 </div>
-
-
-
 {% endblock %}
