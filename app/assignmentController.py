@@ -439,10 +439,13 @@ def delete_testcase2(user, assignment_id, testcase_id):
 @app.route('/view-grade/<int:assignment_id>/<int:submission_id>')
 @authenticate
 def view_grade(user, assignment_id, submission_id):
+    print("inside view gradesd")
     if user.role not in [2, 3]:
         submission = Submission.query.filter_by(id=submission_id, assignmentId=assignment_id).first()
         if submission.userId != user.id:
             return make_response('Access denied', 403)
+        
+    print("11")
 
     submission = Submission.query.filter_by(id=submission_id, assignmentId=assignment_id).first()
     submissionResults = getSubmissionResults(submission_id, submission, user)
@@ -450,12 +453,19 @@ def view_grade(user, assignment_id, submission_id):
     student = findUserById(submission.userId)
     latePenalty = getLatePenalty(submission)
 
+    print("12")
+
+    print(submissionResults)
+
     # Fetch TestCase details for each SubmissionResult
     for result in submissionResults:
+        print("9")
         testCase = TestCase.query.filter_by(id=result.testCaseId).first()
         result.testCaseName = testCase.name if testCase else "Unknown"
         result.testCaseType = testCase.type if testCase else "Unknown"
-        if result.type == "Output Comparison" and result.errorIndex >= 0:
+        print("8")
+        if result.type == "Output Comparison" and result.errorIndex > 0:
+            print("7")
             # Slice the outputs to highlight divergence in the template
             result.preErrorOutput = result.codeOutput[:result.errorIndex]
             result.errorChar = result.codeOutput[result.errorIndex]
@@ -464,8 +474,10 @@ def view_grade(user, assignment_id, submission_id):
             result.expectedPreError = result.expectedOutput[:result.errorIndex]
             result.expectedErrorChar = result.expectedOutput[result.errorIndex]
             result.expectedPostError = result.expectedOutput[result.errorIndex + 1:]
+            print("7")
         else:
             # Ensure these attributes exist even if not used, to avoid template errors
+            print("6")
             result.preErrorOutput = result.codeOutput
             result.errorChar = ''
             result.postErrorOutput = ''
@@ -473,8 +485,10 @@ def view_grade(user, assignment_id, submission_id):
             result.expectedPreError = result.expectedOutput
             result.expectedErrorChar = ''
             result.expectedPostError = ''
-
+            print("6")
+    print("outside")
     grade_info = getStudentGrade(assignment_id, submission.userId)
+    print("13")
     if grade_info:
         student_id = grade_info['student_id']
         total_score = grade_info['score']
@@ -483,6 +497,8 @@ def view_grade(user, assignment_id, submission_id):
         student_id = None
         total_score = 0
         total_possible_score = 0
+
+    print("loading page")
 
     if user.role in [2, 3]:
         return render_template('view-grades-ta.html', assignment=assignment, score=total_score, totalScore=total_possible_score, latePenalty=latePenalty, user=user, submission=submission, student=student, submissionResults=submissionResults)

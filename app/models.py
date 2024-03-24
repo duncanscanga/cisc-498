@@ -91,7 +91,7 @@ class Submission(db.Model):
     submissionDate = db.Column(db.DateTime, nullable=False)
     fileName = db.Column(db.String(500), nullable=False)
     overwritten = db.Column(db.Boolean, nullable=True)
-    assignmentName = db.Column(db.String(500), nullable=False)
+    assignmentName = db.Column(db.String(500), nullable=True)
     manualLateMarks = db.Column(db.Integer, nullable=True)
     taOverallComments = db.Column(db.Text, nullable=True)
 

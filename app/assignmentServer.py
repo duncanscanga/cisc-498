@@ -152,16 +152,22 @@ def find_assignments(user):
 
 
 def addSubmissionLog(filename_with_user_id, user, assignment_id):
+    print("inside submission log")
     pastSubmissions = Submission.query.filter(and_( Submission.userId == user.id, Submission.assignmentId == assignment_id)).all()
+    print("1")
     for pastSubmission in pastSubmissions:
         #overwrite each past submission to only store the latest
         pastSubmission.overwritten = True
-    submission = Submission(assignmentId = assignment_id, userId=user.id, fileName=filename_with_user_id, submissionDate=func.now(), overwritten=False)
+    print("2")
+    submission = Submission(assignmentId = assignment_id, userId=user.id, fileName=filename_with_user_id, submissionDate=func.now(), overwritten=False, taOverallComments="")
+    print("3")
     db.session.add(submission)
+    print("4")
     db.session.commit()
     db.session.flush() 
-
+    print("5")
     latePenalty = getLatePenalty(submission)
+    print("6")
     submission.manualLateMarks = latePenalty
     db.session.commit()
 
