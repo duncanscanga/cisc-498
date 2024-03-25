@@ -8,21 +8,21 @@
   <table class="table">
     <thead>
       <tr>
-        <th>User ID</th>
-        <th>Username</th>
-        <th>Email</th>
-        <th>Role</th>
-        <th>Actions</th>
+        <th style="color: black !important;">User ID</th>
+        <th style="color: black !important;">Username</th>
+        <th style="color: black !important;">Email</th>
+        <th style="color: black !important;">Role</th>
+        <th style="color: black !important;">Actions</th>
       </tr>
     </thead>
     <tbody>
       {% for user in users %}
       <tr>
-        <td>{{ user.id }}</td>
-        <td>{{ user.username }}</td>
-        <td>{{ user.email }}</td>
-        <td>{{ user.role }}</td>
-        <td>
+        <td style="color: black !important;">{{ user.id }}</td>
+        <td style="color: black !important;">{{ user.username }}</td>
+        <td style="color: black !important;">{{ user.email }}</td>
+        <td style="color: black !important;">{{ user.role }}</td>
+        <td style="color: black !important;">
           <a href="{{ url_for('admin_edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary">Edit</a>
           <a href="{{ url_for('admin_user_courses', user_id=user.id) }}" class="btn btn-sm btn-info">View Courses</a>
           <form method="post" action="{{ url_for('admin_delete_user', user_id=user.id) }}" style="display:inline;">

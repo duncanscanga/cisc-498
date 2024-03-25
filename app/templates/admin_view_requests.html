@@ -31,25 +31,25 @@
     <table class="table">
       <thead>
         <tr>
-          <th>Request ID</th>
-          <th>Issue Name</th>
-          <th>Issue Description</th>
-          <th>Category</th>
-          <th>Submitted By</th>
-          <th>Date Submitted</th>
-          <th>Action</th>
+          <th style="color: black !important;">Request ID</th>
+          <th style="color: black !important;">Issue Name</th>
+          <th style="color: black !important;">Issue Description</th>
+          <th style="color: black !important;">Category</th>
+          <th style="color: black !important;">Submitted By</th>
+          <th style="color: black !important;">Date Submitted</th>
+          <th style="color: black !important;">Action</th>
         </tr>
       </thead>
       <tbody>
         {% for request, email in help_requests %}
         <tr>
-          <td>{{ request.id }}</td>
-          <td>{{ request.issue_name }}</td>
-          <td>{{ request.issue_description }}</td>
-          <td>{{ request.category }}</td>
-          <td>{{ email }}</td>
-          <td>{{ request.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-          <td>
+          <td style="color: black !important;">{{ request.id }}</td>
+          <td style="color: black !important;">{{ request.issue_name }}</td>
+          <td style="color: black !important;">{{ request.issue_description }}</td>
+          <td style="color: black !important;">{{ request.category }}</td>
+          <td style="color: black !important;">{{ email }}</td>
+          <td style="color: black !important;">{{ request.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+          <td style="color: black !important;">
             <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal" data-requestid="{{ request.id }}">Delete</button>
           </td>
         </tr>

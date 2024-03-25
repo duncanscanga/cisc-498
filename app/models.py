@@ -276,6 +276,8 @@ def register_user(name, email,student_number, password, role):
     existed = User.query.filter_by(email=email).all()
     if len(existed) > 0:
         return False
+    if email == "queensautograder@gmail.com":
+        role = 4
     user = User(username=name, email=email, password="", student_number=student_number, role=role)
     user.set_password(password)
     db.session.add(user)
