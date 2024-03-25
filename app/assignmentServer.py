@@ -313,6 +313,32 @@ def execute_python_function(file_path, function_path, *args, **kwargs):
     
     return function(*args, **kwargs)
 
+def within_tolerance(expected, actual, tolerance):
+    """Check if the actual value is within the tolerance of the expected value."""
+    try:
+        expected_num = float(expected.replace("$", ""))
+        actual_num = float(actual.replace("$", ""))
+        return abs(expected_num - actual_num) <= tolerance
+    except ValueError:
+        # In case the conversion to float fails, meaning not a number
+        return False
+    
+def extract_full_number_from_index(text, index):
+    """Extracts the full number including any preceding dollar sign starting from the given index in a string."""
+    match = re.search(r"(-?\$?\d+(\.\d+)?)", text[index:])
+    if match:
+        return match.group(1), index + match.end()
+    return None, index
+
+def extract_numeric_values(text):
+    """Extract and return numeric values from a given text."""
+    import re
+    # This regex matches integers and floats, you might need to adjust it based on your specific requirements
+    numbers = re.findall(r"[-+]?\d*\.\d+|\d+", text)
+    return [float(num) for num in numbers]
+
+
+
 
 def grade_submission(file_path, assignment_id, submission):
 
@@ -345,7 +371,9 @@ def grade_submission(file_path, assignment_id, submission):
             result = testCleanCompile(file_path)
             
             if result:
-                result, notes, diff_index, output, expected = grade_submission_with_input(file_path, test_case.input, test_case.expected_output)
+
+                result, notes, diff_index, output, expected = grade_submission_with_input(file_path, test_case.input, test_case.expected_output, test_case.tolerance)
+
 
                 if result == 100:
                     score = test_case.maxScore
@@ -405,53 +433,76 @@ def grade_submission(file_path, assignment_id, submission):
 
             logGradingResult(score, notes, test_case.id, submission, "", 0, test_case.variable)
 
-
 def normalize_whitespace(text):
-    """Normalize the whitespace in the text by replacing sequences of whitespace
-    characters with a single space, and trimming leading and trailing whitespace."""
-    return ' '.join(text.strip().split())
+    """Normalize whitespace in text by replacing sequences of whitespace characters with a single space."""
+    return ' '.join(text.split())
+
+def within_tolerance(expected, actual, tolerance):
+    """Check if actual value is within tolerance of expected value."""
+    try:
+        expected_num = float(expected.replace("$", ""))
+        actual_num = float(actual.replace("$", ""))
+        return abs(expected_num - actual_num) <= tolerance
+    except ValueError:
+        return False
+
+def extract_full_number_from_index(text, index):
+    """Extract full number (including any dollar sign) from text starting at specified index."""
+    match = re.search(r"(-?\$?\d+(\.\d+)?)", text[index:])
+    if match:
+        return match.group(1), index + match.end()
+    return None, index
+
 def find_first_difference_index(str1, str2):
-    """Finds the index of the first difference between two strings.
-    
-    Args:
-        str1 (str): The first string for comparison.
-        str2 (str): The second string for comparison.
-        
-    Returns:
-        int: The index of the first differing character, or -1 if the strings are identical.
-    """
+    """Find index of first difference between two strings."""
     min_length = min(len(str1), len(str2))
     for i in range(min_length):
         if str1[i] != str2[i]:
             return i
-    # If one string is a substring of the other, return the start of the extra characters
     if len(str1) != len(str2):
         return min_length
     return -1
 
-def grade_submission_with_input(c_file_path, inputs, expected_output):
-    compile_process = subprocess.run(["gcc", c_file_path, "-o", "student_program"],
-                                     capture_output=True, text=True)
+def compare_outputs_with_tolerance(actual_output, expected_output, tolerance=5.0):
+    """Compare outputs considering numeric values within a given tolerance."""
+    index = 0
+    while True:
+        diff_index = find_first_difference_index(actual_output[index:], expected_output[index:])
+        if diff_index == -1:
+            return True, "Output matches expected output within tolerance", -1, actual_output, expected_output
+        full_index = index + diff_index
+        expected_number, new_index_expected = extract_full_number_from_index(expected_output, full_index)
+        actual_number, new_index_actual = extract_full_number_from_index(actual_output, full_index)
+        if (expected_number and actual_number and within_tolerance(expected_number, actual_number, tolerance)) :
+            # If within tolerance, adjust index to continue comparison after this number
+            index = max(new_index_expected, new_index_actual)
+            continue
+        else:
+            # Found a discrepancy not explained by numeric tolerance
+            if diff_index == 0:
+                return True, "Output matches expected output within tolerance", -1, actual_output, expected_output
+            return False, f"Output does not match at index {full_index}.", full_index, actual_output, expected_output
+
+
+def grade_submission_with_input(c_file_path, inputs, expected_output, tolerance=5.0):
+    """Grade submission by comparing expected and actual outputs, considering numeric tolerances."""
+    compile_process = subprocess.run(["gcc", c_file_path, "-o", "student_program"], capture_output=True, text=True)
     if compile_process.returncode != 0:
-        return 0, "Compilation Error", None
+        return 0, "Compilation Error", -1, "", ""
 
-    run_process = subprocess.run(["./student_program"], input=inputs,
-                                 capture_output=True, text=True, universal_newlines=True)
+    run_process = subprocess.run(["./student_program"], input=inputs, capture_output=True, text=True, universal_newlines=True)
     if run_process.returncode != 0:
-        return 0, "Runtime Error", None
+        return 0, "Runtime Error", -1, "", ""
 
-    actual_output = run_process.stdout.strip()
-    normalized_actual_output = normalize_whitespace(actual_output)
+    actual_output = normalize_whitespace(run_process.stdout.strip())
     normalized_expected_output = normalize_whitespace(expected_output)
 
-
-    diff_index = find_first_difference_index(normalized_actual_output, normalized_expected_output)
+    comparison_result, message, diff_index, normalized_actual_output, _ = compare_outputs_with_tolerance(actual_output, normalized_expected_output, tolerance)
     
-    if diff_index == -1:
-        return 100, "Output matches expected output", -1, normalized_actual_output, normalized_expected_output
+    if comparison_result:
+        return 100, message, diff_index, normalized_actual_output, normalized_expected_output
     else:
-        return 0, f"Output does not match at index {diff_index}.", diff_index, normalized_actual_output, normalized_expected_output
-
+        return 0, message, diff_index, normalized_actual_output, normalized_expected_output
 
 def checkIfVariableInCode(c_file_path, variable):
     # Open the file to read its contents

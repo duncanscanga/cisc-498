@@ -165,6 +165,7 @@ class TestCase(db.Model):
     type = db.Column(db.String(50), nullable=False)  # New field to specify the type of test case
     input = db.Column(db.Text, nullable=True)  # For test cases that require input
     expected_output = db.Column(db.Text, nullable=True)  # For output comparison tests
+    tolerance = db.Column(db.Float, nullable=True)
 
     def __repr__(self):
         return "<TestCase %r>" % self.id

@@ -132,7 +132,9 @@ ul {
 }
 .container {
     margin: auto; /* Center the container */
-
+    padding-top: 0 !important;
+    padding-left: 0px !important;
+    padding-right: 0px !important;
   }
   
   .results-header h1, .results-header h2 {

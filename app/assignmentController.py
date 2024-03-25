@@ -312,6 +312,7 @@ def edit_testcase(user, assignment_id, test_case_id=None):
         test_case.fileName = request.form.get('file_name', '')
 
         test_case.variable =  request.form.get('variable_name', '')
+        test_case.tolerance=float(request.form.get('tolerance', 0.0))
 
         db.session.commit()
 
@@ -362,6 +363,7 @@ def post_create_testcase(user, assignment_id):
             variable =  request.form.get('variable_name', ''),
             submissionDate = func.now(),
             name = request.form.get('name', ''),
+            tolerance=float(request.form.get('tolerance', 0.0))
             #codeCheckAdditional=request.form.get('code_checks', '')
             
             # Add any other fields you need to capture from the form

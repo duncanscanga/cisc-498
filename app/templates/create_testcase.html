@@ -19,12 +19,16 @@
             </select>
         </div>
         <div class="form-group" id="input_data_group" style="display: none;">
-            <label for="input_data">Input Data (for Output Comparison only)</label>
+            <label for="input_data">Input Data </label>
             <textarea class="form-control" id="input_data" name="input_data" rows="3"></textarea>
         </div>
         <div class="form-group" id="expected_output_group" style="display: none;">
-            <label for="expected_output">Expected Output (for Output Comparison only)</label>
+            <label for="expected_output">Expected Output</label>
             <textarea class="form-control" id="expected_output" name="expected_output" rows="3"></textarea>
+        </div>
+        <div class="form-group" id="tolerance_group" style="display: none;">
+            <label for="tolerance">Tolerance for Numbers (+-)</label>
+            <input type="number" class="form-control" id="tolerance" name="tolerance" step="0.001">
         </div>
         <div class="form-group" id="file_name_group" style="display: none;">
             <label for="file_name">Expected File Name</label>
@@ -57,6 +61,7 @@ function toggleFields() {
     document.getElementById("file_name_group").style.display = type === "File Name" ? "block" : "none";
     document.getElementById("variable_name_group").style.display = type === "Variable Name" ? "block" : "none";
     document.getElementById("python_function_group").style.display = type === "Python Function" ? "block" : "none";
+    document.getElementById("tolerance_group").style.display = type === "Output Comparison" ? "block" : "none";
     // document.getElementById("code_check_group").style.display = type === "Code Check" ? "block" : "none";
 }
 window.onload = toggleFields;
