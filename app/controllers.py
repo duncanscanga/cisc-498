@@ -73,7 +73,8 @@ def get_user_courses(user_id):
 def login_post():
     email = request.form.get('email')
     password = request.form.get('password')
-    user = login(email, password)
+    #user = login(email, password)
+    user = authenticate_user(email, password)
     if user:
         session['logged_in'] = user.email
         """
@@ -142,7 +143,8 @@ def register_post():
         error_message = "The passwords do not match."
     else:
         # use backend api to register the user
-        success = register(name, email, student_number, password, role)
+        # success = register(name, email, student_number, password, role)
+        success = register_user(name, email,student_number, password, role)
         if not success:
             error_message = "Registration failed."
     # if there is any error messages when registering new user

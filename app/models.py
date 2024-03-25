@@ -10,7 +10,7 @@ import os
 import re
 import mosspy
 from nostril import nonsense
-
+from werkzeug.security import generate_password_hash,check_password_hash
 
 '''
 This file defines data models and related business logics
@@ -195,6 +195,14 @@ class User(db.Model):
     # Stores the real name (not required)
     student_number = db.Column(db.String(80), unique=False, nullable=True)
     role = db.Column(db.Integer, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
         return "<User %r>" % self.id
@@ -263,6 +271,22 @@ def register(name, email, student_number, password,role):
     db.session.commit()
 
     return True
+
+def register_user(name, email,student_number, password, role):
+    existed = User.query.filter_by(email=email).all()
+    if len(existed) > 0:
+        return False
+    user = User(username=name, email=email, password="", student_number=student_number, role=role)
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
+    return True
+
+def authenticate_user(email, password):
+    user = User.query.filter_by(email=email).first()
+    if user and user.check_password(password):
+        return user  # Authentication successful
+    return False  # Authentication failed
 
 
 def login(email, password):
