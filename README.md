@@ -18,7 +18,7 @@ For a quick overview of what the Auto-Grader is capable of, check out our [demo 
 
 ## Getting Started
 
-Before diving in, please visit our [Wiki](https://github.com/duncanscanga/cisc-498/wiki) for comprehensive documentation on setting up, using, and troubleshooting the Auto-Grader.
+Before diving in, please visit our [Wiki](https://github.com/duncanscanga/cisc-498/wiki/CISC‐498-Autograder-Documentation) for comprehensive documentation on setting up, using, and troubleshooting the Auto-Grader.
 
 ### Setting Up Local Development Environment
 
