@@ -18,7 +18,7 @@ For a quick overview of what the Auto-Grader is capable of, check out our [demo 
 
 ## Getting Started
 
-Before diving in, please visit our [Wiki](https://github.com/duncanscanga/cisc-498/wiki/CISC‐498-Autograder-Documentation) for comprehensive documentation on setting up, using, and troubleshooting the Auto-Grader.
+Before diving in, please visit our [Wiki](https://github.com/duncanscanga/cisc-498/wiki) for comprehensive documentation on setting up, using, and troubleshooting the Auto-Grader.
 
 ### Setting Up Local Development Environment
 
@@ -27,3 +27,38 @@ To set up the Auto-Grader on your local machine, follow these steps:
 ```bash
 pip install -r requirements.txt
 python -m app
+```
+
+## Deploying with Docker
+
+Docker simplifies deployment by containerizing the application. Here's how you can deploy the Auto-Grader using Docker:
+
+### Update Image
+
+To build and tag a new version of the Docker image, run:
+
+```bash
+docker build --tag=dscanga/cisc498:v1 .
+docker push dscanga/cisc498:v1
+```
+
+### Get Latest Image
+
+To pull the latest version of the Docker image, use:
+
+```bash
+docker pull dscanga/cisc498:v1
+```
+
+### Run the Container
+
+To run the application using Docker, execute:
+
+```bash
+docker run -p <YourPort>:8081 dscanga/cisc498:v1 python3 -m app
+```
+Replace <YourPort> with the port number you wish to use for accessing the application. Ensure this port is open on your system or server.
+
+
+## Licence
+This project is licensed under the MIT License - see the LICENSE file for details.
