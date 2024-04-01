@@ -1,6 +1,6 @@
 # Auto-Grader for the Engineering Dept. at Queen's University
 
-Welcome to the GitHub repository for the Auto-Grader project, a  tool designed to automate the grading process for programming assignments in the Engineering Department at Queen's University. This tool supports the evaluation of code submissions, providing immediate feedback, test results, and plagiarism detection to enhance the learning and teaching experience. This was developed for the Queen's University CISC 498 Capstone Course in 2024.
+Welcome to the GitHub repository for the Auto-Grader project, a  tool designed to automate the grading process for programming assignments in the Engineering Department at Queen's University. This tool supports the evaluation of code submissions, providing immediate feedback, test results, and plagiarism detection. This was developed for the Queen's University CISC 498 Capstone Course in 2024.
 
 ## Features
 
